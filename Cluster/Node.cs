@@ -29,15 +29,12 @@ namespace Padi.Cluster
 
 
 
-        #region "Properties"
-
+        #region "Properties
         public string URL
         {
             get { return this.url; }
 
         }
-
-
         #endregion
 
 
@@ -110,7 +107,11 @@ namespace Padi.Cluster
             }
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="msg"></param>
         public void sendMessage(string sender, string msg)
         {
             if (this.tracker != this)
@@ -123,14 +124,25 @@ namespace Padi.Cluster
                 {
                     if (node.URL != sender)
                         node.onClusterMessage(msg);
-                }, true, true);
+                }, true);
             }
         }
 
 
-
+        /// <summary>
+        /// A delegate to handle the calls to a node in the cluster
+        /// </summary>
+        /// <param name="node"></param>
         public delegate void ClusterHandler(INode node);
-        private void clusterAction(ClusterHandler onSucess, bool warnDisconections, bool recursive)
+
+
+
+        /// <summary>
+        /// Calls the delegate function to every Node in the cluster
+        /// </summary>
+        /// <param name="onSucess">Delegate function to call for each Node in the cluster</param>
+        /// <param name="warnDisconections">Warn the nodes of eventual disconections</param>
+        private void clusterAction(ClusterHandler onSucess, bool warnDisconections)
         {
             List<string> disconected = new List<string>();
 
@@ -161,16 +173,19 @@ namespace Padi.Cluster
                         cluster.Remove(badNode);
                     }
                 }
-
-                clusterAction((node) =>
+                if (warnDisconections)
                 {
-                    foreach (string badNode in disconected)
+                    clusterAction((node) =>
                     {
-                        node.onClusterDecrease(badNode);
-                    }
+                        foreach (string badNode in disconected)
+                        {
+                            node.onClusterDecrease(badNode);
+                        }
 
-                }, true, true);
+                    }, true);
+                }
             }
+
         }
 
 
@@ -179,8 +194,8 @@ namespace Padi.Cluster
 
 
 
-        public void onClusterIncrease(string peer) { JoinEvent(peer); }
-        public void onClusterDecrease(string peer) { DisconectedEvent(peer); }
+        public void onClusterIncrease(string peer) { if (JoinEvent != null) JoinEvent(peer); }
+        public void onClusterDecrease(string peer) { if (DisconectedEvent != null) DisconectedEvent(peer); }
         public void onClusterMessage(string msg) { Console.WriteLine(msg); }
     }
 }
