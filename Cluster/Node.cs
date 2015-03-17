@@ -22,6 +22,7 @@ namespace Padi.Cluster
         private readonly string url = null;
         private Dictionary<string, INode> cluster = null;
         private INode tracker = null;
+        private ThrPool workThr = null;
 
         //Event
         public event JoinEventHandler JoinEvent;
@@ -50,6 +51,7 @@ namespace Padi.Cluster
             this.url = "tcp://localhost:" + port + "/Node";
             this.cluster = new Dictionary<string, INode>();
             this.tracker = this;
+            this.workThr = new ThrPool(10, 50);
 
             Console.WriteLine("RegisterChannel " + port);
             ChannelServices.RegisterChannel(this.channel, ensureSecurity);
@@ -96,13 +98,9 @@ namespace Padi.Cluster
                 INode newPeer = (INode)Activator.GetObject(typeof(INode), nodeUrl);
 
 
-                foreach (INode node in cluster.Values)
-                {
-                    node.onClusterIncrease(nodeUrl);
-                }
+                clusterAction((node) => { node.onClusterIncrease(nodeUrl); }, true);
 
-                cluster.Add(nodeUrl, newPeer);
-                onClusterIncrease(nodeUrl);
+                lock (cluster) { cluster.Add(nodeUrl, newPeer); }
                 return this.URL;
             }
         }
@@ -146,50 +144,49 @@ namespace Padi.Cluster
         {
             List<string> disconected = new List<string>();
 
-            lock (cluster)
+
+            foreach (KeyValuePair<string, INode> entry in cluster)
             {
-                string tryKey = "";
-                try
+
+                this.workThr.AssyncInvoke(() =>
                 {
-                    foreach (KeyValuePair<string, INode> entry in cluster)
+                    try
                     {
-                        tryKey = entry.Key;
                         onSucess(entry.Value);
                     }
-                }
-                catch
-                {
-                    disconected.Add(tryKey);
-                }
-                onSucess(this);
-            }
-
-            if (disconected.Count != 0)
-            {
-                lock (cluster)
-                {
-                    foreach (string badNode in disconected)
+                    catch
                     {
-                        cluster.Remove(badNode);
+                        disconect(entry.Key);
                     }
-                }
-                if (warnDisconections)
-                {
-                    clusterAction((node) =>
-                    {
-                        foreach (string badNode in disconected)
-                        {
-                            node.onClusterDecrease(badNode);
-                        }
-
-                    }, true);
-                }
+                });
             }
-
+            onSucess(this);
         }
 
 
 
+        public void disconect(string peer)
+        {
+            if (this.tracker != this)
+            {
+                this.tracker.disconect(peer);
+            }
+            else
+            {
+                lock (cluster)
+                {
+                    if (cluster.ContainsKey(peer))
+                    {
+                        cluster.Remove(peer);
+                        clusterAction((node) =>
+                        {
+                            node.onClusterDecrease(peer);
+                        }, true);
+                    }
+
+                }
+            }
+        }
 
 
 

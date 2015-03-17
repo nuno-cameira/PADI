@@ -12,12 +12,12 @@ namespace Padi.Cluster
         string URL { get; }
 
         string join(string nodeUrl);
-       
+        void disconect(string peer);
 
         void onClusterMessage(string msg);
         void onClusterIncrease(string peer);
         void onClusterDecrease(string peer);
-        
-    
+
+
     }
 }
