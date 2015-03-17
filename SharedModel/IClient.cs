@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharedModel
+namespace Padi.SharedModel
 {
-    interface IClient
+    public interface IClient
     {
     }
 }

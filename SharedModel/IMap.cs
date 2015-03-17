@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharedModel
+namespace Padi.SharedModel
 {
-    delegate ISet<Tuple> Map(String key, String value);
+    public delegate ISet<Tuple> Map(String key, String value);
 }

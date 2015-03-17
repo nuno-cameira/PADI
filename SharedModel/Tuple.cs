@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharedModel
+namespace Padi.SharedModel
 {
     [Serializable]
-    class Tuple
+    public class Tuple
     {
         public String key;
         public String value;

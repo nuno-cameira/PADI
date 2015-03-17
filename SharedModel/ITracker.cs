@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharedModel
+namespace Padi.SharedModel
 {
-    interface ITracker
+    public interface ITracker
     {
+        void sendMessage(string sender, string msg);
     }
 }
