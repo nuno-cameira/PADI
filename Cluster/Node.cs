@@ -22,6 +22,7 @@ namespace Padi.Cluster
         private readonly string url = null;
         private Dictionary<string, INode> cluster = null;
         private INode tracker = null;
+        private ThrPool workThr = null;
 
         //Event
         public event JoinEventHandler JoinEvent;
@@ -29,15 +30,12 @@ namespace Padi.Cluster
 
 
 
-        #region "Properties"
-
+        #region "Properties
         public string URL
         {
             get { return this.url; }
 
         }
-
-
         #endregion
 
 
@@ -53,6 +51,7 @@ namespace Padi.Cluster
             this.url = "tcp://localhost:" + port + "/Node";
             this.cluster = new Dictionary<string, INode>();
             this.tracker = this;
+            this.workThr = new ThrPool(10, 50);
 
             Console.WriteLine("RegisterChannel " + port);
             ChannelServices.RegisterChannel(this.channel, ensureSecurity);
@@ -99,18 +98,18 @@ namespace Padi.Cluster
                 INode newPeer = (INode)Activator.GetObject(typeof(INode), nodeUrl);
 
 
-                foreach (INode node in cluster.Values)
-                {
-                    node.onClusterIncrease(nodeUrl);
-                }
+                clusterAction((node) => { node.onClusterIncrease(nodeUrl); }, true);
 
-                cluster.Add(nodeUrl, newPeer);
-                onClusterIncrease(nodeUrl);
+                lock (cluster) { cluster.Add(nodeUrl, newPeer); }
                 return this.URL;
             }
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="msg"></param>
         public void sendMessage(string sender, string msg)
         {
             if (this.tracker != this)
@@ -123,64 +122,77 @@ namespace Padi.Cluster
                 {
                     if (node.URL != sender)
                         node.onClusterMessage(msg);
-                }, true, true);
+                }, true);
             }
         }
 
 
-
+        /// <summary>
+        /// A delegate to handle the calls to a node in the cluster
+        /// </summary>
+        /// <param name="node"></param>
         public delegate void ClusterHandler(INode node);
-        private void clusterAction(ClusterHandler onSucess, bool warnDisconections, bool recursive)
+
+
+
+        /// <summary>
+        /// Calls the delegate function to every Node in the cluster
+        /// </summary>
+        /// <param name="onSucess">Delegate function to call for each Node in the cluster</param>
+        /// <param name="warnDisconections">Warn the nodes of eventual disconections</param>
+        private void clusterAction(ClusterHandler onSucess, bool warnDisconections)
         {
             List<string> disconected = new List<string>();
 
-            lock (cluster)
+
+            foreach (KeyValuePair<string, INode> entry in cluster)
             {
-                string tryKey = "";
-                try
+
+                this.workThr.AssyncInvoke(() =>
                 {
-                    foreach (KeyValuePair<string, INode> entry in cluster)
+                    try
                     {
-                        tryKey = entry.Key;
                         onSucess(entry.Value);
                     }
-                }
-                catch
-                {
-                    disconected.Add(tryKey);
-                }
-                onSucess(this);
+                    catch
+                    {
+                        disconect(entry.Key);
+                    }
+                });
             }
+            onSucess(this);
+        }
 
-            if (disconected.Count != 0)
+
+
+        public void disconect(string peer)
+        {
+            if (this.tracker != this)
+            {
+                this.tracker.disconect(peer);
+            }
+            else
             {
                 lock (cluster)
                 {
-                    foreach (string badNode in disconected)
+                    if (cluster.ContainsKey(peer))
                     {
-                        cluster.Remove(badNode);
+                        cluster.Remove(peer);
+                        clusterAction((node) =>
+                        {
+                            node.onClusterDecrease(peer);
+                        }, true);
                     }
+
                 }
-
-                clusterAction((node) =>
-                {
-                    foreach (string badNode in disconected)
-                    {
-                        node.onClusterDecrease(badNode);
-                    }
-
-                }, true, true);
             }
         }
 
 
 
 
-
-
-
-        public void onClusterIncrease(string peer) { JoinEvent(peer); }
-        public void onClusterDecrease(string peer) { DisconectedEvent(peer); }
+        public void onClusterIncrease(string peer) { if (JoinEvent != null) JoinEvent(peer); }
+        public void onClusterDecrease(string peer) { if (DisconectedEvent != null) DisconectedEvent(peer); }
         public void onClusterMessage(string msg) { Console.WriteLine(msg); }
     }
 }
