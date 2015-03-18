@@ -79,9 +79,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Cluster\Cluster.csproj">
       <Project>{9e62b194-e2fe-4508-b8ef-08cdad2ef2d4}</Project>
       <Name>Cluster</Name>
