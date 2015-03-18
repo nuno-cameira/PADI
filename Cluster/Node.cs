@@ -20,13 +20,16 @@ namespace Padi.Cluster
     {
         private readonly TcpChannel channel = null;
         private readonly string url = null;
+        private readonly int id;
         private Dictionary<string, INode> cluster = null;
         private INode tracker = null;
         private ThrPool workThr = null;
+        private bool isTracker;
 
         //Event
         public event JoinEventHandler JoinEvent;
         public event DisconectedEventHandler DisconectedEvent;
+
 
 
 
@@ -51,11 +54,12 @@ namespace Padi.Cluster
             this.url = "tcp://localhost:" + port + "/Node";
             this.cluster = new Dictionary<string, INode>();
             this.tracker = this;
+            this.isTracker = true;
             this.workThr = new ThrPool(10, 50);
 
             Console.WriteLine("RegisterChannel " + port);
             ChannelServices.RegisterChannel(this.channel, ensureSecurity);
-            RemotingServices.Marshal(this, "Node", typeof(INode));
+            RemotingServices.Marshal(this, "Node", typeof(Node));
 
         }
 
@@ -78,9 +82,18 @@ namespace Padi.Cluster
             {
                 this.tracker = cluster;
             }
+            this.isTracker = false;
 
+            Console.WriteLine("Syncing to cluster...");
+            List<string> clus = this.tracker.getCluster();
 
+            foreach (string s in clus)
+            {
+                Console.WriteLine("> " + s + " " + (s != this.URL));
 
+                if (s != this.URL) { onClusterIncrease(s); }
+
+            }
         }
         #endregion
 
@@ -100,7 +113,6 @@ namespace Padi.Cluster
 
                 clusterAction((node) => { node.onClusterIncrease(nodeUrl); }, true);
 
-                lock (cluster) { cluster.Add(nodeUrl, newPeer); }
                 return this.URL;
             }
         }
@@ -114,7 +126,15 @@ namespace Padi.Cluster
         {
             if (this.tracker != this)
             {
-                this.tracker.sendMessage(sender, msg);
+                try
+                {
+                    this.tracker.sendMessage(sender, msg);
+                }
+                catch
+                {
+                    tryPromote();
+                }
+
             }
             else
             {
@@ -125,6 +145,56 @@ namespace Padi.Cluster
                 }, true);
             }
         }
+
+        public void tryPromote()
+        {
+            string lowestURL = this.URL;
+            foreach (KeyValuePair<string, INode> entry in cluster)
+            {
+                if (entry.Key.GetHashCode() < this.URL.GetHashCode())
+                {
+                    lowestURL = entry.Key;
+                    break;
+                }
+            }
+
+
+            if (lowestURL.Equals(this.URL))
+            {
+                promote();
+            }
+            else
+            {
+                INode node = (INode)Activator.GetObject(typeof(INode), lowestURL);
+                node.promote();
+            }
+        }
+
+        public void promote()
+        {
+            lock (this)
+            {
+                if (!this.isTracker)
+                {
+                    Console.WriteLine("What?\n Worker is evolving!");
+                    Dictionary<string, INode> newCluster = new Dictionary<string, INode>();
+                    foreach (KeyValuePair<string, INode> entry in cluster)
+                    {
+
+                        INode node = (INode)Activator.GetObject(typeof(INode), entry.Key);
+                        newCluster.Add(entry.Key, node);
+                    }
+
+                    this.cluster = newCluster;
+                    this.isTracker = true;
+                    this.tracker = this;
+                    clusterAction((node) => { node.onTrackerChange(this.URL); }, true);
+                }
+
+            }
+        }
+
+
 
 
         /// <summary>
@@ -154,8 +224,9 @@ namespace Padi.Cluster
                     {
                         onSucess(entry.Value);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Console.WriteLine(ex.ToString());
                         disconect(entry.Key);
                     }
                 });
@@ -188,11 +259,51 @@ namespace Padi.Cluster
             }
         }
 
+        public List<string> getCluster()
+        {
+            if (this.isTracker)
+            {
+                List<string> clusterURLs = new List<string>();
+
+                foreach (KeyValuePair<string, INode> entry in cluster)
+                {
+
+                    clusterURLs.Add(entry.Key);
+                }
+                return clusterURLs;
+            }
+            else
+            {
+                return this.tracker.getCluster();
+            }
+
+        }
 
 
+        public void onClusterIncrease(string peer)
+        {
+            INode node = null;
+            if (this.isTracker) { node = (INode)Activator.GetObject(typeof(INode), peer); }
 
-        public void onClusterIncrease(string peer) { if (JoinEvent != null) JoinEvent(peer); }
-        public void onClusterDecrease(string peer) { if (DisconectedEvent != null) DisconectedEvent(peer); }
-        public void onClusterMessage(string msg) { Console.WriteLine(msg); }
+            lock (cluster) { cluster.Add(peer, node); }
+            if (JoinEvent != null) JoinEvent(peer);
+        }
+        public void onClusterDecrease(string peer)
+        {
+            lock (cluster) { cluster.Remove(peer); }
+            if (DisconectedEvent != null) DisconectedEvent(peer);
+        }
+
+        public void onClusterMessage(string msg)
+        {
+            Console.WriteLine(msg);
+        }
+
+
+        public void onTrackerChange(string p)
+        {
+            Console.WriteLine("onTrackerChange");
+            if (!this.isTracker) { this.tracker = (INode)Activator.GetObject(typeof(INode), p); }
+        }
     }
 }

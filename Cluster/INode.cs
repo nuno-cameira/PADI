@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Padi.SharedModel;
+﻿using Padi.SharedModel;
+using System;
 
 namespace Padi.Cluster
 {
     public interface INode : IWorker, ITracker
     {
         string URL { get; }
-
-        string join(string nodeUrl);
         void disconect(string peer);
-
-        void onClusterMessage(string msg);
-        void onClusterIncrease(string peer);
+        System.Collections.Generic.List<string> getCluster();
+        string join(string nodeUrl);
         void onClusterDecrease(string peer);
-
-
+        void onClusterIncrease(string peer);
+        void onClusterMessage(string msg);
+        void onTrackerChange(string p);
+        void promote();
+        void tryPromote();
     }
 }
