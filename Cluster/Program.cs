@@ -21,12 +21,12 @@ namespace Padi.Cluster
             if (args.Length == 2)
             {
                 Console.WriteLine("Creating Single Node " + args[0]);
-                node = new Node(int.Parse(args[1]), false);
+                node = new Node(int.Parse(args[0]), int.Parse(args[1]), false);
             }
             else
             {
                 Console.WriteLine("Creating cluster Node " + args[0]);
-                node = new Node(int.Parse(args[1]), false, args[2]);
+                node = new Node(int.Parse(args[0]), int.Parse(args[1]), false, args[2]);
             }
 
 

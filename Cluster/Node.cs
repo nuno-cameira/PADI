@@ -39,6 +39,12 @@ namespace Padi.Cluster
             get { return this.url; }
 
         }
+
+        public int ID
+        {
+            get { return this.id; }
+
+        }
         #endregion
 
 
@@ -48,7 +54,7 @@ namespace Padi.Cluster
         /// <summary>
         /// Constructs a singe node and registers it.
         /// </summary>
-        public Node(int port, bool ensureSecurity)
+        public Node(int id, int port, bool ensureSecurity)
         {
             this.channel = new TcpChannel(port);
             this.url = "tcp://localhost:" + port + "/Node";
@@ -56,6 +62,7 @@ namespace Padi.Cluster
             this.tracker = this;
             this.isTracker = true;
             this.workThr = new ThrPool(10, 50);
+            this.id = id;
 
             Console.WriteLine("RegisterChannel " + port);
             ChannelServices.RegisterChannel(this.channel, ensureSecurity);
@@ -67,8 +74,8 @@ namespace Padi.Cluster
         /// <summary>
         /// Constructor a node and adds it to the providade cluster.
         /// </summary>
-        public Node(int port, bool ensureSecurity, string clusterURL)
-            : this(port, ensureSecurity)
+        public Node(int id, int port, bool ensureSecurity, string clusterURL)
+            : this(id, port, ensureSecurity)
         {
             INode cluster = (INode)Activator.GetObject(typeof(INode), clusterURL);
 
@@ -84,15 +91,11 @@ namespace Padi.Cluster
             }
             this.isTracker = false;
 
-            Console.WriteLine("Syncing to cluster...");
             List<string> clus = this.tracker.getCluster();
 
             foreach (string s in clus)
             {
-                Console.WriteLine("> " + s + " " + (s != this.URL));
-
                 if (s != this.URL) { onClusterIncrease(s); }
-
             }
         }
         #endregion

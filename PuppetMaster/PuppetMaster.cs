@@ -81,11 +81,11 @@ namespace PuppetMaster
             Node node = null;
             if (input.Length == 4)
             {
-                node = new Node(Convert.ToInt32(input[3]), false);
+                node = new Node(int.Parse(input[1]), Convert.ToInt32(input[3]), false);
             }
             else if (input.Length == 5)
             {
-                node = new Node(Convert.ToInt32(input[3]), false, input[4]);
+                node = new Node(int.Parse(input[1]), Convert.ToInt32(input[3]), false, input[4]);
             }
             else
             {
