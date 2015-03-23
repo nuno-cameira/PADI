@@ -7,6 +7,7 @@ using Padi.SharedModel;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
+using ThreadPool;
 
 namespace Padi.Cluster
 {
@@ -66,7 +67,7 @@ namespace Padi.Cluster
             this.workThr = new ThrPool(10, 50);
             this.id = id;
 
-        
+
 
             ChannelServices.RegisterChannel(this.channel, ensureSecurity);
             RemotingServices.Marshal(this, "Node", typeof(Node));
@@ -94,7 +95,6 @@ namespace Padi.Cluster
             else
             {
                 this.tracker = cluster;
-                
             }
             Console.WriteLine("Joined cluster @ " + this.tracker.URL);
             this.isTracker = false;
@@ -107,7 +107,7 @@ namespace Padi.Cluster
             }
         }
 
- 
+
         #endregion
 
         /// <summary>
@@ -298,8 +298,8 @@ namespace Padi.Cluster
             INode node = null;
             if (this.isTracker) { node = (INode)Activator.GetObject(typeof(INode), peer); }
 
-            lock (cluster) {   cluster.Add(peer, node); }
-            if (JoinEvent != null) {JoinEvent(peer); }
+            lock (cluster) { if (!cluster.ContainsKey(peer)) { cluster.Add(peer, node); } }
+            if (JoinEvent != null) { JoinEvent(peer); }
         }
         public void onClusterDecrease(string peer)
         {
