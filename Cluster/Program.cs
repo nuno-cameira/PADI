@@ -20,12 +20,10 @@ namespace Padi.Cluster
 
             if (args.Length == 2)
             {
-                Console.WriteLine("Creating Single Node " + args[0]);
                 node = new Node(int.Parse(args[0]), int.Parse(args[1]), false);
             }
             else
             {
-                Console.WriteLine("Creating cluster Node " + args[0]);
                 node = new Node(int.Parse(args[0]), int.Parse(args[1]), false, args[2]);
             }
 
@@ -37,12 +35,19 @@ namespace Padi.Cluster
             Console.WriteLine("Server Ready!");
             Console.WriteLine("Type \"kill\" to close the server.");
             string input;
-            do
+            while(true)
             {
                 input = System.Console.ReadLine();
+                if (input == "kill")
+                    break;
                 node.sendMessage(node.URL, input);
 
-            } while (input != "kill");
+            }
+
+            node = null;
+            Console.WriteLine("Server killed.");
+            Environment.Exit(0);
+           
            
         }
 

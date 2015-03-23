@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 
 namespace PuppetMaster
@@ -78,20 +79,31 @@ namespace PuppetMaster
 
         private void processWorker(string[] input)
         {
-            Node node = null;
+            //Node node = null;
             if (input.Length == 4)
             {
-                node = new Node(int.Parse(input[1]), Convert.ToInt32(input[3]), false);
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+               
+                startInfo.FileName = "Cluster.exe";
+                startInfo.Arguments = input[1] + " " + input[3];
+
+                Process.Start(startInfo);
+                //node = new Node(int.Parse(input[1]), Convert.ToInt32(input[3]), false);
             }
             else if (input.Length == 5)
             {
-                node = new Node(int.Parse(input[1]), Convert.ToInt32(input[3]), false, input[4]);
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.FileName = "Cluster.exe";
+                startInfo.Arguments = input[1] + " " + input[3]+" " + input[4];
+
+                Process.Start(startInfo);
+                //node = new Node(int.Parse(input[1]), Convert.ToInt32(input[3]), false, input[4]);
             }
             else
             {
                 throw new NotImplementedException();
             }
-            nodeList.Add(node);
+            //nodeList.Add(node);
         }
 
         private void processSubmit(string[] input)

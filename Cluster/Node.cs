@@ -56,6 +56,8 @@ namespace Padi.Cluster
         /// </summary>
         public Node(int id, int port, bool ensureSecurity)
         {
+            Console.WriteLine("Creating Node...");
+
             this.channel = new TcpChannel(port);
             this.url = "tcp://localhost:" + port + "/Node";
             this.cluster = new Dictionary<string, INode>();
@@ -64,9 +66,11 @@ namespace Padi.Cluster
             this.workThr = new ThrPool(10, 50);
             this.id = id;
 
-            Console.WriteLine("RegisterChannel " + port);
+            
             ChannelServices.RegisterChannel(this.channel, ensureSecurity);
             RemotingServices.Marshal(this, "Node", typeof(Node));
+
+            Console.WriteLine("Created node w/ ID: " + id + " @ " + this.URL);
 
         }
 
@@ -78,7 +82,8 @@ namespace Padi.Cluster
             : this(id, port, ensureSecurity)
         {
             INode cluster = (INode)Activator.GetObject(typeof(INode), clusterURL);
-
+            
+            Console.WriteLine("Joining cluster @ "+cluster.URL);
             string trackerURL = cluster.join(this.URL);
 
             if (trackerURL != clusterURL)
@@ -88,16 +93,22 @@ namespace Padi.Cluster
             else
             {
                 this.tracker = cluster;
+                
             }
+            Console.WriteLine("Joined cluster @ " + this.tracker.URL);
             this.isTracker = false;
 
             List<string> clus = this.tracker.getCluster();
 
             foreach (string s in clus)
+            
             {
+                Console.WriteLine(s);
                 if (s != this.URL) { onClusterIncrease(s); }
             }
         }
+
+ 
         #endregion
 
         /// <summary>
@@ -288,8 +299,8 @@ namespace Padi.Cluster
             INode node = null;
             if (this.isTracker) { node = (INode)Activator.GetObject(typeof(INode), peer); }
 
-            lock (cluster) { cluster.Add(peer, node); }
-            if (JoinEvent != null) JoinEvent(peer);
+            lock (cluster) {   cluster.Add(peer, node); }
+            if (JoinEvent != null) {JoinEvent(peer); }
         }
         public void onClusterDecrease(string peer)
         {
