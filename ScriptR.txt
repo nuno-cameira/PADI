@@ -1,0 +1,1 @@
+WORKER 3 tcp://193.136.154.65:8999/PuppetMaster 8382 tcp://193.136.154.65:8182/Node

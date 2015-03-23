@@ -31,7 +31,7 @@ namespace PuppetMaster
             this.URL = "tcp://localhost:" + puppetPort + "/PuppetMaster";
 
             ChannelServices.RegisterChannel(this.channel, false);
-            RemotingServices.Marshal(this, "PuppetMaster", typeof(Node));
+            RemotingServices.Marshal(this, "PuppetMaster", typeof(PuppetMaster));
         }
 
 

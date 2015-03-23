@@ -103,7 +103,6 @@ namespace Padi.Cluster
             foreach (string s in clus)
             
             {
-                Console.WriteLine(s);
                 if (s != this.URL) { onClusterIncrease(s); }
             }
         }
