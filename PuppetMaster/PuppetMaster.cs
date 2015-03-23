@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.Remoting.Channels.Tcp;
+using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting;
 
 
 namespace PuppetMaster
@@ -27,6 +29,9 @@ namespace PuppetMaster
         {
             this.channel = new TcpChannel(puppetPort);
             this.URL = "tcp://localhost:" + puppetPort + "/PuppetMaster";
+
+            ChannelServices.RegisterChannel(this.channel, false);
+            RemotingServices.Marshal(this, "PuppetMaster", typeof(Node));
         }
 
 
