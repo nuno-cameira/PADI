@@ -59,14 +59,15 @@ namespace Padi.Cluster
             Console.WriteLine("Creating Node...");
 
             this.channel = new TcpChannel(port);
-            this.url = "tcp://localhost:" + port + "/Node";
+            this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/Node";
             this.cluster = new Dictionary<string, INode>();
             this.tracker = this;
             this.isTracker = true;
             this.workThr = new ThrPool(10, 50);
             this.id = id;
 
-            
+        
+
             ChannelServices.RegisterChannel(this.channel, ensureSecurity);
             RemotingServices.Marshal(this, "Node", typeof(Node));
 
@@ -82,8 +83,8 @@ namespace Padi.Cluster
             : this(id, port, ensureSecurity)
         {
             INode cluster = (INode)Activator.GetObject(typeof(INode), clusterURL);
-            
-            Console.WriteLine("Joining cluster @ "+cluster.URL);
+
+            Console.WriteLine("Joining cluster @ " + clusterURL);
             string trackerURL = cluster.join(this.URL);
 
             if (trackerURL != clusterURL)
@@ -101,7 +102,6 @@ namespace Padi.Cluster
             List<string> clus = this.tracker.getCluster();
 
             foreach (string s in clus)
-            
             {
                 if (s != this.URL) { onClusterIncrease(s); }
             }
