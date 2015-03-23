@@ -6,15 +6,29 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Runtime.Remoting.Channels.Tcp;
 
 
 namespace PuppetMaster
 {
-    class PuppetMaster
+    class PuppetMaster : MarshalByRefObject, IPuppetMaster
     {
         const string EXTENSION = ".txt";
+        private readonly TcpChannel channel = null;
         string scriptName = String.Empty;
         private List<Node> nodeList = new List<Node>();
+        string URL = string.Empty;
+
+        // HARD CODED PUPPET PORT, CHANGE LATER!
+        int puppetPort = 8999;
+
+
+        public PuppetMaster()
+        {
+            this.channel = new TcpChannel(puppetPort);
+            this.URL = "tcp://localhost:" + puppetPort + "/PuppetMaster";
+        }
+
 
         public void loadScript(string scriptName)
         {
@@ -44,7 +58,7 @@ namespace PuppetMaster
                 switch (input[0])
                 {
                     case "WORKER":
-                        processWorker(input);
+                        createWorker(input);
                         break;
                     case "SUBMIT":
                         processSubmit(input);
@@ -77,33 +91,39 @@ namespace PuppetMaster
             }
         }
 
-        private void processWorker(string[] input)
+        public void processWorker(string[] input)
         {
-            //Node node = null;
             if (input.Length == 4)
             {
                 ProcessStartInfo startInfo = new ProcessStartInfo();
-               
                 startInfo.FileName = "Cluster.exe";
                 startInfo.Arguments = input[1] + " " + input[3];
-
                 Process.Start(startInfo);
-                //node = new Node(int.Parse(input[1]), Convert.ToInt32(input[3]), false);
             }
             else if (input.Length == 5)
             {
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.FileName = "Cluster.exe";
-                startInfo.Arguments = input[1] + " " + input[3]+" " + input[4];
-
+                startInfo.Arguments = input[1] + " " + input[3] + " " + input[4];
                 Process.Start(startInfo);
-                //node = new Node(int.Parse(input[1]), Convert.ToInt32(input[3]), false, input[4]);
             }
             else
             {
                 throw new NotImplementedException();
             }
-            //nodeList.Add(node);
+        }
+
+        public void createWorker(string[] input)
+        {
+            string url = input[2];
+
+            IPuppetMaster master;
+            if (this.URL != url)
+                master = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), url);
+            else
+                master = this;
+
+            master.processWorker(input);
         }
 
         private void processSubmit(string[] input)
@@ -145,6 +165,9 @@ namespace PuppetMaster
         {
             throw new NotImplementedException();
         }
+
+
+
 
 
     }
