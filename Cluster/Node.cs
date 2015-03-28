@@ -86,7 +86,9 @@ namespace Padi.Cluster
             INode cluster = (INode)Activator.GetObject(typeof(INode), clusterURL);
 
             Console.WriteLine("Joining cluster @ " + clusterURL);
-            string trackerURL = cluster.join(this.URL);
+
+            ClusterReport report = cluster.join(this.URL);
+            string trackerURL = report.Tracker;
 
             if (trackerURL != clusterURL)
             {
@@ -99,7 +101,7 @@ namespace Padi.Cluster
             Console.WriteLine("Joined cluster @ " + this.tracker.URL);
             this.isTracker = false;
 
-            List<string> clus = this.tracker.getCluster();
+            List<string> clus = new List<string>(report.Cluster);
 
             foreach (string s in clus)
             {
@@ -113,7 +115,7 @@ namespace Padi.Cluster
         /// <summary>
         /// Receives a Node's URL and adds it to the cluster.
         /// </summary>
-        public string join(string nodeUrl)
+        public ClusterReport join(string nodeUrl)
         {
             if (this.tracker != this)
             {
@@ -126,7 +128,14 @@ namespace Padi.Cluster
 
                 clusterAction((node) => { node.onClusterIncrease(nodeUrl); }, true);
 
-                return this.URL;
+
+                ClusterReport report = new ClusterReport();
+                report.View = 1;//No use as for now
+                report.Tracker = this.URL;
+                report.Cluster = new List<string>(this.cluster.Keys);
+
+
+                return report;
             }
         }
 
@@ -272,25 +281,7 @@ namespace Padi.Cluster
             }
         }
 
-        public List<string> getCluster()
-        {
-            if (this.isTracker)
-            {
-                List<string> clusterURLs = new List<string>();
-
-                foreach (KeyValuePair<string, INode> entry in cluster)
-                {
-
-                    clusterURLs.Add(entry.Key);
-                }
-                return clusterURLs;
-            }
-            else
-            {
-                return this.tracker.getCluster();
-            }
-
-        }
+      
 
 
         public void onClusterIncrease(string peer)

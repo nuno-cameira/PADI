@@ -7,8 +7,7 @@ namespace Padi.Cluster
     {
         string URL { get; }
         void disconect(string peer);
-        System.Collections.Generic.List<string> getCluster();
-        string join(string nodeUrl);
+        ClusterReport join(string nodeUrl);
         void onClusterDecrease(string peer);
         void onClusterIncrease(string peer);
         void onClusterMessage(string msg);
