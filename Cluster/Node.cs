@@ -8,6 +8,7 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using ThreadPool;
+using System.Reflection;
 
 namespace Padi.Cluster
 {
@@ -33,7 +34,7 @@ namespace Padi.Cluster
         private INode tracker = null;
         private ThrPool workThr = null;
         //Job Queue
-        private List<Job> jobs; 
+        private List<Job> jobs;
 
 
         //Event
@@ -301,20 +302,44 @@ namespace Padi.Cluster
         }
 
 
+        private IMapper loadMapper(byte[] code, string className)
+        {
+            Assembly assembly = Assembly.Load(code);
+            
+            // Walk through each type in the assembly looking for our class
+            foreach (Type type in assembly.GetTypes())
+            {
+                if (type.IsClass == true)
+                {
+                    if (type.FullName.EndsWith("." + className))
+                    {
+                        // create an instance of the object
+                        return (IMapper) Activator.CreateInstance(type);
+                    }
+                }
+            }
+
+            throw (new System.Exception("could not invoke method"));
+        }
+
+
         #endregion
 
         #region "Events"
         public void onClusterIncrease(string peer)
         {
             INode node = null;
-            if (this.isTracker) { 
+            if (this.isTracker)
+            {
 
                 node = (INode)Activator.GetObject(typeof(INode), peer);
-      
-                foreach (Job job in this.jobs) {
-                    
-                    if (job.hasSplits()) {
-               
+
+                foreach (Job job in this.jobs)
+                {
+
+                    if (job.hasSplits())
+                    {
+
                         node.doWork(job.assignSplit(peer), job.Mapper, job.Client);
                         break;
                     }
@@ -372,5 +397,5 @@ namespace Padi.Cluster
         }
     }
 
-   
+
 }
