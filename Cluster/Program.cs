@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Padi.SharedModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,11 +36,12 @@ namespace Padi.Cluster
             Console.WriteLine("Server Ready!");
             Console.WriteLine("Type \"kill\" to close the server.");
             string input;
-            while(true)
+            while (true)
             {
                 input = System.Console.ReadLine();
                 if (input == "kill")
                     break;
+                node.submit(3, null, "tcp:://" + Util.LocalIPAddress());
             }
 
             node = null;

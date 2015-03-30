@@ -32,6 +32,9 @@ namespace Padi.Cluster
         private Dictionary<string, NodeStatus> cluster = null;
         private INode tracker = null;
         private ThrPool workThr = null;
+        //Job Queue
+        private List<Job> jobs; 
+
 
         //Event
         public event JoinEventHandler JoinEvent;
@@ -71,6 +74,7 @@ namespace Padi.Cluster
             this.isTracker = true;
             this.workThr = new ThrPool(10, 50);
             this.id = id;
+            this.jobs = new List<Job>();
 
 
 
@@ -196,13 +200,17 @@ namespace Padi.Cluster
             }
         }
 
+        private void clusterAction(ClusterHandler onSucess, bool warnDisconections)
+        {
+            clusterAction(onSucess, warnDisconections, true);
+        }
 
         /// <summary>
         /// Calls the delegate function to every Node in the cluster
         /// </summary>
         /// <param name="onSucess">Delegate function to call for each Node in the cluster</param>
         /// <param name="warnDisconections">Warn the nodes of eventual disconections</param>
-        private void clusterAction(ClusterHandler onSucess, bool warnDisconections)
+        private void clusterAction(ClusterHandler onSucess, bool warnDisconections, bool incTrack)
         {
             List<string> disconected = new List<string>();
 
@@ -210,20 +218,23 @@ namespace Padi.Cluster
             foreach (KeyValuePair<string, NodeStatus> entry in cluster)
             {
 
+
+
                 this.workThr.AssyncInvoke(() =>
                 {
                     try
                     {
                         onSucess(entry.Value.node);
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        Console.WriteLine(ex.ToString());
+
                         disconect(entry.Key);
                     }
                 });
             }
-            onSucess(this);
+            if (incTrack)
+                onSucess(this);
         }
 
 
@@ -255,33 +266,60 @@ namespace Padi.Cluster
         #endregion
 
 
-
+        #region "WORKER"
         public void submit(int splits, byte[] mapper, string clientUrl)
         {
-            if (this.tracker != this)
+            if (this.isTracker)
+            {
+                //Make a new job
+                Job job = new Job(splits, mapper, clientUrl);
+                jobs.Add(job);
+
+                clusterAction((node) =>
+                {
+                    //Assign specific job to each node
+                    if (job.hasSplits())
+                        node.doWork(job.assignSplit(node.URL), mapper, clientUrl);
+
+                    //Inform all nodes about new job
+                    node.onJobReceived(splits, mapper, clientUrl);
+
+                }, true, false);
+            }
+            else
             {
                 this.tracker.submit(splits, mapper, clientUrl);
                 return;
             }
-            else
-            {
-                //Distrbiut work
-            }
         }
 
 
-        public void doWork(int split, byte[] mapper, string clientUrl)
+        public bool doWork(int split, byte[] mapper, string clientUrl)
         {
+            Console.WriteLine("Node::doWork(" + split + " , mapper , " + clientUrl + ")");
+            return true;
         }
 
 
-
+        #endregion
 
         #region "Events"
         public void onClusterIncrease(string peer)
         {
             INode node = null;
-            if (this.isTracker) { node = (INode)Activator.GetObject(typeof(INode), peer); }
+            if (this.isTracker) { 
+
+                node = (INode)Activator.GetObject(typeof(INode), peer);
+      
+                foreach (Job job in this.jobs) {
+                    
+                    if (job.hasSplits()) {
+               
+                        node.doWork(job.assignSplit(peer), job.Mapper, job.Client);
+                        break;
+                    }
+                }
+            }
 
             lock (cluster) { if (!cluster.ContainsKey(peer)) { cluster.Add(peer, new NodeStatus(node)); } }
             if (JoinEvent != null) { JoinEvent(peer); }
@@ -333,4 +371,6 @@ namespace Padi.Cluster
             this.isWorking = isWorking;
         }
     }
+
+   
 }

@@ -47,6 +47,7 @@
     <Compile Include="CircularBuffer.cs" />
     <Compile Include="ClusterReport.cs" />
     <Compile Include="INode.cs" />
+    <Compile Include="Job.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

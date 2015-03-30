@@ -31,7 +31,7 @@ namespace ThreadPool
 		{
 			buf.Produce(action);
 
-			Console.WriteLine("Submitted action");
+			//Console.WriteLine("Submitted action");
 		}
 
 		public void consomeExec()

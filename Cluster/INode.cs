@@ -13,7 +13,7 @@ namespace Padi.Cluster
         ClusterReport join(string nodeUrl);
         void disconect(string peer);
         void promote();
-        void doWork(int split, byte[] mapper, string clientUrl);//"Submit" do Tracker
+        bool doWork(int split, byte[] mapper, string clientUrl);//"Submit" do Tracker
 
         //Cluster Events
         void onTrackerChange(string peer);
