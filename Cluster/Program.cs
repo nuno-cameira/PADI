@@ -40,16 +40,14 @@ namespace Padi.Cluster
                 input = System.Console.ReadLine();
                 if (input == "kill")
                     break;
-                node.sendMessage(node.URL, input);
-
             }
 
             node = null;
             Console.WriteLine("Server killed.");
             Environment.Exit(0);
-           
-           
         }
+
+
 
         private static void onDisconectedEvent(string url)
         {

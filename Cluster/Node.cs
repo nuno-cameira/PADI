@@ -11,21 +11,27 @@ using ThreadPool;
 
 namespace Padi.Cluster
 {
+
     //Delegate to handle the received messages
     public delegate void JoinEventHandler(string url);
     //Delegate to handle the received messages
     public delegate void DisconectedEventHandler(string url);
+    // A delegate to handle the calls to a node in the cluster
+    public delegate void ClusterHandler(INode node);
 
 
     public class Node : MarshalByRefObject, INode
     {
+        //Node Variables
         private readonly TcpChannel channel = null;
         private readonly string url = null;
         private readonly int id;
-        private Dictionary<string, INode> cluster = null;
+        private bool isTracker;
+
+        //Cluster status Variables
+        private Dictionary<string, NodeStatus> cluster = null;
         private INode tracker = null;
         private ThrPool workThr = null;
-        private bool isTracker;
 
         //Event
         public event JoinEventHandler JoinEvent;
@@ -49,7 +55,6 @@ namespace Padi.Cluster
         #endregion
 
 
-
         #region "Constructors"
 
         /// <summary>
@@ -61,7 +66,7 @@ namespace Padi.Cluster
 
             this.channel = new TcpChannel(port);
             this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/Node";
-            this.cluster = new Dictionary<string, INode>();
+            this.cluster = new Dictionary<string, NodeStatus>();
             this.tracker = this;
             this.isTracker = true;
             this.workThr = new ThrPool(10, 50);
@@ -112,6 +117,8 @@ namespace Padi.Cluster
 
         #endregion
 
+
+        #region "Cluster Actions"
         /// <summary>
         /// Receives a Node's URL and adds it to the cluster.
         /// </summary>
@@ -139,39 +146,11 @@ namespace Padi.Cluster
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="msg"></param>
-        public void sendMessage(string sender, string msg)
-        {
-            if (this.tracker != this)
-            {
-                try
-                {
-                    this.tracker.sendMessage(sender, msg);
-                }
-                catch
-                {
-                    tryPromote();
-                }
 
-            }
-            else
-            {
-                clusterAction((node) =>
-                {
-                    if (node.URL != sender)
-                        node.onClusterMessage(msg);
-                }, true);
-            }
-        }
-
-        public void tryPromote()
+        private void tryPromote()
         {
             string lowestURL = this.URL;
-            foreach (KeyValuePair<string, INode> entry in cluster)
+            foreach (KeyValuePair<string, NodeStatus> entry in cluster)
             {
                 if (entry.Key.GetHashCode() < this.URL.GetHashCode())
                 {
@@ -199,12 +178,13 @@ namespace Padi.Cluster
                 if (!this.isTracker)
                 {
                     Console.WriteLine("What?\n Worker is evolving!");
-                    Dictionary<string, INode> newCluster = new Dictionary<string, INode>();
-                    foreach (KeyValuePair<string, INode> entry in cluster)
+                    Dictionary<string, NodeStatus> newCluster = new Dictionary<string, NodeStatus>();
+                    foreach (KeyValuePair<string, NodeStatus> entry in cluster)
                     {
 
                         INode node = (INode)Activator.GetObject(typeof(INode), entry.Key);
-                        newCluster.Add(entry.Key, node);
+
+                        newCluster.Add(entry.Key, new NodeStatus(node, entry.Value.isWorking));
                     }
 
                     this.cluster = newCluster;
@@ -217,16 +197,6 @@ namespace Padi.Cluster
         }
 
 
-
-
-        /// <summary>
-        /// A delegate to handle the calls to a node in the cluster
-        /// </summary>
-        /// <param name="node"></param>
-        public delegate void ClusterHandler(INode node);
-
-
-
         /// <summary>
         /// Calls the delegate function to every Node in the cluster
         /// </summary>
@@ -237,14 +207,14 @@ namespace Padi.Cluster
             List<string> disconected = new List<string>();
 
 
-            foreach (KeyValuePair<string, INode> entry in cluster)
+            foreach (KeyValuePair<string, NodeStatus> entry in cluster)
             {
 
                 this.workThr.AssyncInvoke(() =>
                 {
                     try
                     {
-                        onSucess(entry.Value);
+                        onSucess(entry.Value.node);
                     }
                     catch (Exception ex)
                     {
@@ -281,15 +251,39 @@ namespace Padi.Cluster
             }
         }
 
-      
+
+        #endregion
 
 
+
+        public void submit(int splits, byte[] mapper, string clientUrl)
+        {
+            if (this.tracker != this)
+            {
+                this.tracker.submit(splits, mapper, clientUrl);
+                return;
+            }
+            else
+            {
+                //Distrbiut work
+            }
+        }
+
+
+        public void doWork(int split, byte[] mapper, string clientUrl)
+        {
+        }
+
+
+
+
+        #region "Events"
         public void onClusterIncrease(string peer)
         {
             INode node = null;
             if (this.isTracker) { node = (INode)Activator.GetObject(typeof(INode), peer); }
 
-            lock (cluster) { if (!cluster.ContainsKey(peer)) { cluster.Add(peer, node); } }
+            lock (cluster) { if (!cluster.ContainsKey(peer)) { cluster.Add(peer, new NodeStatus(node)); } }
             if (JoinEvent != null) { JoinEvent(peer); }
         }
         public void onClusterDecrease(string peer)
@@ -298,16 +292,45 @@ namespace Padi.Cluster
             if (DisconectedEvent != null) DisconectedEvent(peer);
         }
 
-        public void onClusterMessage(string msg)
-        {
-            Console.WriteLine(msg);
-        }
-
 
         public void onTrackerChange(string p)
         {
             Console.WriteLine("onTrackerChange");
             if (!this.isTracker) { this.tracker = (INode)Activator.GetObject(typeof(INode), p); }
+        }
+
+
+        public void onSplitDone(string peer) { }
+        public void onSplitStart(string peer, int split, string clientUrl) { }
+
+
+        public void onJobDone(string clientUrl) { }
+        public void onJobReceived(int splits, byte[] mapper, string clientUrl) { }
+
+
+    }
+
+        #endregion
+
+
+
+
+    class NodeStatus
+    {
+        public INode node;
+        public bool isWorking;
+        //public  TIMESPAMP
+
+        public NodeStatus(INode node)
+        {
+            this.node = node;
+            this.isWorking = false;
+        }
+
+        public NodeStatus(INode node, bool isWorking)
+        {
+            this.node = node;
+            this.isWorking = isWorking;
         }
     }
 }
