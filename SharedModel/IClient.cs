@@ -8,6 +8,7 @@ namespace Padi.SharedModel
 {
     public interface IClient
     {
+        void Submit(string inputPath, string outputPath, int splits, string className, string dllPath);
     }
 }
 

@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModel", "SharedModel\SharedModel.csproj", "{0764A223-03D1-473F-8ED4-C619847199CA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cluster", "Cluster\Cluster.csproj", "{9E62B194-E2FE-4508-B8EF-08CDAD2EF2D4}"
@@ -8,6 +10,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetMasterForm", "PuppetMaster\PuppetMasterForm.csproj", "{CD765F27-2A9B-4D2B-A382-E60F71EAD551}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "User", "User\User.csproj", "{AF7BA7C0-0B53-4F68-86E0-D72177E55D64}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7A82A7B0-E91D-4C7F-86CB-8C498073A81C} = {7A82A7B0-E91D-4C7F-86CB-8C498073A81C}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{7A82A7B0-E91D-4C7F-86CB-8C498073A81C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0764A223-03D1-473F-8ED4-C619847199CA} = {0764A223-03D1-473F-8ED4-C619847199CA}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +41,10 @@ Global
 		{AF7BA7C0-0B53-4F68-86E0-D72177E55D64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF7BA7C0-0B53-4F68-86E0-D72177E55D64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF7BA7C0-0B53-4F68-86E0-D72177E55D64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A82A7B0-E91D-4C7F-86CB-8C498073A81C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A82A7B0-E91D-4C7F-86CB-8C498073A81C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A82A7B0-E91D-4C7F-86CB-8C498073A81C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A82A7B0-E91D-4C7F-86CB-8C498073A81C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

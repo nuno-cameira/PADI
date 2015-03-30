@@ -8,29 +8,49 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 
-namespace Padi.User
+namespace Client
 {
     public class Client : MarshalByRefObject, IClient
     {
         //URL of the worker node used to submit jobs
         private string entryURL;
 
-        //Job dictionary
-        private Dictionary<string, Job> jobs = new Dictionary<string, Job>();
+        private readonly TcpChannel channel = null;
+
+        //Hardcoded. Change later
+        private readonly int clientPort = 8300;
+        private readonly string url = null;
+
+
 
         public Client(string EntryURL)
         {
+            Console.WriteLine("Creating the Client...");
+
+            this.channel = new TcpChannel(clientPort);
+            this.url = "tcp://" + Util.LocalIPAddress() + ":" + clientPort + "/Client";
+
+
+            ChannelServices.RegisterChannel(this.channel, false);
+            RemotingServices.Marshal(this, "Client", typeof(Client));
+
             this.entryURL = EntryURL;
         }
 
 
         public void Submit(string inputPath, string outputPath, int splits, string className, string dllPath)
         {
+            Console.WriteLine("entryURL: " + this.entryURL);
 
-            //TODO: Invoke splitFile and submit the job to the node in "entryURL".
+            Console.WriteLine("inputPath: " + inputPath);
+            Console.WriteLine("outputPath: " + outputPath);
+            Console.WriteLine("splits: " + splits);
+            Console.WriteLine("className: " + className);
+            Console.WriteLine("dllPath: " + dllPath);
+            //TODO: Submit the job to the node in "entryURL".
         }
 
-        private void splitFile(string inputPath)
+        private void splitFile(string inputPath, string jobTimestamp)
         {
             //TODO: Implement the split function and save the data to the jobs dictionary
         }
@@ -48,10 +68,6 @@ namespace Padi.User
         {
 
         }
-    }
-
-    class Job
-    {
-        //TODO: This class should maintain a list of KeyValuePairs containing the file splits for this job
+   
     }
 }
