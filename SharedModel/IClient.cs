@@ -9,6 +9,28 @@ namespace Padi.SharedModel
     public interface IClient
     {
         void Submit(string inputPath, string outputPath, int splits, string className, string dllPath);
+        
+      
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mapContent"></param>
+        /// <param name="splitNumber"></param>
+        void onSplitDone(string mapContent, int splitNumber);
+
+        /// <summary>
+        /// All splits processed and returned
+        /// </summary>
+        void onJobDone();
+
+
+       /// <summary>
+       /// Returns the content of the file in the given split number
+       /// </summary>
+       /// <param name="splitNumber"></param>
+       /// <returns></returns>
+        string returnSplit(int splitNumber);
+
     }
 }
 
