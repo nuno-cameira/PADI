@@ -378,7 +378,7 @@ namespace Padi.Cluster
 
 
 
-    class NodeStatus
+    public class NodeStatus
     {
         public INode node;
         public bool isWorking;

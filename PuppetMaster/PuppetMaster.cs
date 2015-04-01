@@ -18,7 +18,8 @@ namespace PuppetMaster
         const string EXTENSION = ".txt";
         private readonly TcpChannel channel = null;
         string scriptName = String.Empty;
-        private List<Node> nodeList = new List<Node>();
+        private Dictionary<string, NodeStatus> nodeList = null;
+        //private List<Node> nodeList = new List<Node>();
         string URL = string.Empty;
 
         // HARD CODED PUPPET PORT, CHANGE LATER!
@@ -29,6 +30,7 @@ namespace PuppetMaster
         {
             this.channel = new TcpChannel(puppetPort);
             this.URL = "tcp://localhost:" + puppetPort + "/PuppetMaster";
+            this.nodeList = new Dictionary<string, NodeStatus>();
 
             ChannelServices.RegisterChannel(this.channel, false);
             RemotingServices.Marshal(this, "PuppetMaster", typeof(PuppetMaster));
@@ -54,6 +56,14 @@ namespace PuppetMaster
             string s = String.Empty;
 
             //Path.Combine(basePath, filePath);
+
+            // TODO Any line in a PuppetMaster script starting with a ”%” sign should be ignored.
+
+            /* TODO The GUI shall allow to load a script,
+             * execute it step-by-step and without
+             * interruptions
+             */
+
             while ((s = sr.ReadLine()) != null)
             {
                 string[] input = s.Split(' ');
@@ -78,10 +88,10 @@ namespace PuppetMaster
                         processSloww(input);
                         break;
                     case "FREEZEW":
-                        processFreezen(input);
+                        processFreezew(input);
                         break;
                     case "UNFREEZEW":
-                        processUnfreezen(input);
+                        processUnfreezew(input);
                         break;
                     case "FREEZEC":
                         processFreezec(input);
@@ -151,13 +161,24 @@ namespace PuppetMaster
             throw new NotImplementedException();
         }
 
-        private void processFreezen(string[] input)
+        private void processFreezew(string[] input)
         {
-            throw new NotImplementedException();
+            string url = input[1];
+
+            // TODO see if it's already freezed
+
+            //disconnects node with url
+            NodeStatus nodeS = nodeList[url];
+            nodeS.node.disconect(url);
         }
 
-        private void processUnfreezen(string[] input)
+        private void processUnfreezew(string[] input)
         {
+            /*TODO do we need to save the state of the object 
+             * in order to load it again with the same state?
+             * or does it just come to life as a completly new object
+             */
+
             throw new NotImplementedException();
         }
 
