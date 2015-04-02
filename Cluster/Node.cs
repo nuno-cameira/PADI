@@ -18,7 +18,7 @@ namespace Padi.Cluster
     //Delegate to handle the received messages
     public delegate void DisconectedEventHandler(string url);
     // A delegate to handle the calls to a node in the cluster
-    public delegate void ClusterHandler(INode node);
+    public delegate object ClusterHandler(INode node);
 
 
     public class Node : MarshalByRefObject, INode
@@ -27,15 +27,14 @@ namespace Padi.Cluster
         private readonly TcpChannel channel = null;
         private readonly string url = null;
         private readonly int id;
-        private bool isTracker;
+
+        private ThrPool workThr = null;
+        private List<Job> jobs; //job queue
 
         //Cluster status Variables
         private Dictionary<string, NodeStatus> cluster = null;
         private INode tracker = null;
-        private ThrPool workThr = null;
-        //Job Queue
-        private List<Job> jobs;
-
+        private string trkUrl = "";
 
         //Event
         public event JoinEventHandler JoinEvent;
@@ -56,6 +55,9 @@ namespace Padi.Cluster
             get { return this.id; }
 
         }
+
+        public bool IsTracker { get { return this.trkUrl.Equals(this.url); } }
+
         #endregion
 
 
@@ -70,9 +72,10 @@ namespace Padi.Cluster
 
             this.channel = new TcpChannel(port);
             this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/Node";
+            this.trkUrl = this.url;
             this.cluster = new Dictionary<string, NodeStatus>();
             this.tracker = this;
-            this.isTracker = true;
+
             this.workThr = new ThrPool(10, 50);
             this.id = id;
             this.jobs = new List<Job>();
@@ -97,19 +100,42 @@ namespace Padi.Cluster
 
             Console.WriteLine("Joining cluster @ " + clusterURL);
 
-            ClusterReport report = cluster.join(this.URL);
+            ClusterReport report = null;
+
+            //Attempt to join the cluster
+            int attempts = 3;
+            while (attempts != 0)
+            {
+                attempts--;
+                report = cluster.join(this.URL);
+                if (report != null)
+                    break;
+
+                Console.WriteLine("Retrying...");
+            }
+
+            //Check for valid cluster's answer 
+            if (report == null)
+            {
+                Console.WriteLine("Failed to joining cluster @ " + clusterURL);
+                return;
+            }
+
             string trackerURL = report.Tracker;
 
             if (trackerURL != clusterURL)
             {
                 this.tracker = (INode)Activator.GetObject(typeof(INode), trackerURL);
+                this.trkUrl = trackerURL;
             }
             else
             {
                 this.tracker = cluster;
+                this.trkUrl = clusterURL;
             }
-            Console.WriteLine("Joined cluster @ " + this.tracker.URL);
-            this.isTracker = false;
+
+            Console.WriteLine("Joined cluster @ " + this.trkUrl);
+
 
             List<string> clus = new List<string>(report.Cluster);
 
@@ -129,16 +155,15 @@ namespace Padi.Cluster
         /// </summary>
         public ClusterReport join(string nodeUrl)
         {
-            if (this.tracker != this)
+
+
+            if (this.IsTracker)
             {
-                return this.tracker.join(nodeUrl);
-            }
-            else
-            {
+
                 INode newPeer = (INode)Activator.GetObject(typeof(INode), nodeUrl);
 
 
-                clusterAction((node) => { node.onClusterIncrease(nodeUrl); }, true);
+                clusterAction((node) => { node.onClusterIncrease(nodeUrl); return null; });
 
 
                 ClusterReport report = new ClusterReport();
@@ -148,6 +173,11 @@ namespace Padi.Cluster
 
 
                 return report;
+            }
+            else
+            {
+
+                return (ClusterReport)nodeAction((trk) => { return trk.join(nodeUrl); }, this.trkUrl);
             }
         }
 
@@ -171,8 +201,8 @@ namespace Padi.Cluster
             }
             else
             {
-                INode node = (INode)Activator.GetObject(typeof(INode), lowestURL);
-                node.promote();
+
+                nodeAction((node) => { node.promote(); return null; }, lowestURL);
             }
         }
 
@@ -180,7 +210,7 @@ namespace Padi.Cluster
         {
             lock (this)
             {
-                if (!this.isTracker)
+                if (!this.IsTracker)
                 {
                     Console.WriteLine("What?\n Worker is evolving!");
                     Dictionary<string, NodeStatus> newCluster = new Dictionary<string, NodeStatus>();
@@ -193,17 +223,70 @@ namespace Padi.Cluster
                     }
 
                     this.cluster = newCluster;
-                    this.isTracker = true;
+
                     this.tracker = this;
-                    clusterAction((node) => { node.onTrackerChange(this.URL); }, true);
+                    this.trkUrl = this.url;
+                    clusterAction((node) => { node.onTrackerChange(this.URL); return null; });
                 }
 
             }
         }
 
-        private void clusterAction(ClusterHandler onSucess, bool warnDisconections)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="onSucess"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        private object nodeAction(ClusterHandler onSucess, string url)
         {
-            clusterAction(onSucess, warnDisconections, true);
+
+
+            object sucess = null;
+
+
+            INode node = null;
+            if (url == this.trkUrl)
+                node = this.tracker;
+            else
+                node = cluster[url].node;
+
+            //Checks if proxy exists
+            if (node == null)
+                node = (INode)Activator.GetObject(typeof(INode), url);
+
+
+            try
+            {
+                sucess = onSucess(node);
+            }
+            catch //remote server does not exist
+            {
+                if (url == this.trkUrl)
+                {
+                    tryPromote();
+                }
+                else
+                {
+                    nodeAction((trk) => { trk.disconect(url); return null; }, this.trkUrl);
+                }
+            }
+
+
+            return sucess;
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="onSucess"></param>
+        /// <param name="warnDisconections"></param>
+        private void clusterAction(ClusterHandler onSucess)
+        {
+            clusterAction(onSucess, true, false);
         }
 
         /// <summary>
@@ -211,14 +294,15 @@ namespace Padi.Cluster
         /// </summary>
         /// <param name="onSucess">Delegate function to call for each Node in the cluster</param>
         /// <param name="warnDisconections">Warn the nodes of eventual disconections</param>
-        private void clusterAction(ClusterHandler onSucess, bool warnDisconections, bool incTrack)
+        private void clusterAction(ClusterHandler onSucess, bool incTrack, bool freeOnly)
         {
             List<string> disconected = new List<string>();
 
 
             foreach (KeyValuePair<string, NodeStatus> entry in cluster)
             {
-
+                if (freeOnly && entry.Value.isWorking)
+                    continue;
 
 
                 this.workThr.AssyncInvoke(() =>
@@ -242,11 +326,7 @@ namespace Padi.Cluster
 
         public void disconect(string peer)
         {
-            if (this.tracker != this)
-            {
-                this.tracker.disconect(peer);
-            }
-            else
+            if (this.IsTracker)
             {
                 lock (cluster)
                 {
@@ -256,10 +336,17 @@ namespace Padi.Cluster
                         clusterAction((node) =>
                         {
                             node.onClusterDecrease(peer);
-                        }, true);
+                            return null;
+                        });
                     }
 
                 }
+
+            }
+            else
+            {
+                nodeAction((trk) => { trk.disconect(peer); return null; }, this.trkUrl);
+
             }
         }
 
@@ -267,29 +354,33 @@ namespace Padi.Cluster
         #endregion
 
 
-        #region "WORKER"
+        #region "Worker"
         public void submit(int splits, byte[] mapper, string clientUrl)
         {
-            if (this.isTracker)
+            if (this.IsTracker)
             {
-                //Make a new job
-                Job job = new Job(splits, mapper, clientUrl);
-                jobs.Add(job);
+
+                onJobReceived(splits, mapper, clientUrl);
 
                 clusterAction((node) =>
                 {
-                    //Assign specific job to each node
-                    if (job.hasSplits())
-                        node.doWork(job.assignSplit(node.URL), mapper, clientUrl);
+                    Job job = jobs[0];
+                    if (job != null)
+                    {
+                        //Assign specific job to each node
+                        if (job.hasSplits())
+                            node.doWork(job.assignSplit(node.URL), mapper, clientUrl);
 
-                    //Inform all nodes about new job
-                    node.onJobReceived(splits, mapper, clientUrl);
+                        //Inform all nodes about new job
+                        node.onJobReceived(splits, mapper, clientUrl);
+                    }
 
-                }, true, false);
+                    return null;
+                }, false, true);
             }
             else
             {
-                this.tracker.submit(splits, mapper, clientUrl);
+                nodeAction((trk) => { trk.submit(splits, mapper, clientUrl); return null; }, this.trkUrl);
                 return;
             }
         }
@@ -305,7 +396,7 @@ namespace Padi.Cluster
         private IMapper loadMapper(byte[] code, string className)
         {
             Assembly assembly = Assembly.Load(code);
-            
+
             // Walk through each type in the assembly looking for our class
             foreach (Type type in assembly.GetTypes())
             {
@@ -314,7 +405,7 @@ namespace Padi.Cluster
                     if (type.FullName.EndsWith("." + className))
                     {
                         // create an instance of the object
-                        return (IMapper) Activator.CreateInstance(type);
+                        return (IMapper)Activator.CreateInstance(type);
                     }
                 }
             }
@@ -329,7 +420,7 @@ namespace Padi.Cluster
         public void onClusterIncrease(string peer)
         {
             INode node = null;
-            if (this.isTracker)
+            if (this.IsTracker)
             {
 
                 node = (INode)Activator.GetObject(typeof(INode), peer);
@@ -359,7 +450,7 @@ namespace Padi.Cluster
         public void onTrackerChange(string p)
         {
             Console.WriteLine("onTrackerChange");
-            if (!this.isTracker) { this.tracker = (INode)Activator.GetObject(typeof(INode), p); }
+            if (!this.IsTracker) { this.tracker = (INode)Activator.GetObject(typeof(INode), p); }
         }
 
 
@@ -368,7 +459,13 @@ namespace Padi.Cluster
 
 
         public void onJobDone(string clientUrl) { }
-        public void onJobReceived(int splits, byte[] mapper, string clientUrl) { }
+        public void onJobReceived(int splits, byte[] mapper, string clientUrl)
+        {
+            Console.WriteLine("onJobReceived");
+            //Make a new job
+            Job job = new Job(splits, mapper, clientUrl);
+            jobs.Add(job);
+        }
 
 
     }

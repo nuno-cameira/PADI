@@ -41,7 +41,7 @@ namespace Padi.Cluster
                 input = System.Console.ReadLine();
                 if (input == "kill")
                     break;
-                node.submit(3, null, "tcp:://" + Util.LocalIPAddress());
+                node.submit(3, null, args[1]);
             }
 
             node = null;
