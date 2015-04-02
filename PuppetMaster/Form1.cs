@@ -55,13 +55,14 @@ namespace PuppetMaster
 
         private void button_loadScript_Click(object sender, EventArgs e)
         {
-            string s = textBox_script.Text;
+            string scriptName = textBox_script.Text;
             try
             {
-                pm.loadScript(s);
+                pm.loadScript(scriptName);
                 // TODO should this be here?
                 button_run.Enabled = true;
                 button_step.Enabled = true;
+                label_loadedScript.Text = "Script Loaded: \"" + scriptName + "\"";
             }
             catch (FileNotFoundException)
             {

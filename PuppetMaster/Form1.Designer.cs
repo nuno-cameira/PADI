@@ -37,6 +37,7 @@
             this.button_run = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.label_loadedScript = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // textBox_script
@@ -126,11 +127,20 @@
             this.label2.TabIndex = 9;
             this.label2.Text = "Console";
             // 
+            // label_loadedScript
+            // 
+            this.label_loadedScript.AutoSize = true;
+            this.label_loadedScript.Location = new System.Drawing.Point(15, 357);
+            this.label_loadedScript.Name = "label_loadedScript";
+            this.label_loadedScript.Size = new System.Drawing.Size(0, 13);
+            this.label_loadedScript.TabIndex = 10;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(316, 382);
+            this.Controls.Add(this.label_loadedScript);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button_run);
@@ -158,6 +168,7 @@
         private System.Windows.Forms.Button button_run;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label_loadedScript;
     }
 }
 
