@@ -9,17 +9,27 @@ using System.Diagnostics;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
+using System.Windows.Forms;
 
 
 namespace PuppetMaster
 {
+
+    //Delegate to handle the received messages
+    public delegate void NewWorkerHandler(string urlNode);
+
     class PuppetMaster : MarshalByRefObject, IPuppetMaster
     {
+
+        // Event
+        public event NewWorkerHandler NewWorkerEvent;
+
+        //PuppetMaster Variables
         const string EXTENSION = ".txt";
         private readonly TcpChannel channel = null;
-        string scriptName = String.Empty;
-        private Dictionary<string, NodeStatus> nodeList = null;
-        //private List<Node> nodeList = new List<Node>();
+        StreamReader scriptStreamReader = null;
+        //public Dictionary<string, NodeData> nodeList = null;
+        private List<NodeData> nodeList = new List<NodeData>();
         string URL = string.Empty;
 
         // HARD CODED PUPPET PORT, CHANGE LATER!
@@ -30,7 +40,8 @@ namespace PuppetMaster
         {
             this.channel = new TcpChannel(puppetPort);
             this.URL = "tcp://localhost:" + puppetPort + "/PuppetMaster";
-            this.nodeList = new Dictionary<string, NodeStatus>();
+            //this.nodeList = new Dictionary<string, NodeData>();
+            this.nodeList = new List<NodeData>();
 
             ChannelServices.RegisterChannel(this.channel, false);
             RemotingServices.Marshal(this, "PuppetMaster", typeof(PuppetMaster));
@@ -39,11 +50,81 @@ namespace PuppetMaster
 
         public void loadScript(string scriptName)
         {
-            this.scriptName = scriptName;
+            try
+            {
+                this.scriptStreamReader = File.OpenText("../../../" + scriptName + EXTENSION);
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("File doesn't exist");
+            }
         }
 
 
+        /// <summary>
+        /// Reads and executes all commands in scriptStreamReader until there's nothing more to read
+        /// </summary>
         public void parser()
+        {
+            while (readLine() != null) ;
+        }
+
+        /// <summary>
+        /// Reads and executes a single line in scriptStreamReader
+        /// </summary>
+        public string readLine()
+        {
+            string s = String.Empty;
+
+            if ((s = scriptStreamReader.ReadLine()) != null)
+            {
+                executeCommand(s);
+            }
+            return s;
+        }
+
+
+        public void executeCommand(string s)
+        {
+            string[] input = s.Split(' ');
+
+            switch (input[0])
+            {
+                case "WORKER":
+                    createWorker(input);
+                    break;
+                case "SUBMIT":
+                    processSubmit(input);
+                    break;
+                case "WAIT":
+                    processWait(input);
+                    break;
+                case "STATUS:":
+                    processStatus(input);
+                    break;
+                case "SLOWW":
+                    processSloww(input);
+                    break;
+                case "FREEZEW":
+                    processFreezew(input);
+                    break;
+                case "UNFREEZEW":
+                    processUnfreezew(input);
+                    break;
+                case "FREEZEC":
+                    processFreezec(input);
+                    break;
+                case "UNFREEZEC":
+                    processUnfreezec(input);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+        // TODO base code, erase when not needed
+        public void parser2()
         {
             //If we want to do this listing all files in the root project directory
             /*string fullpath = Directory.GetCurrentDirectory();
@@ -52,7 +133,7 @@ namespace PuppetMaster
             path = Path.GetDirectoryName(path);*/
 
             //maybe check if file exists 1st
-            StreamReader sr = File.OpenText("../../../" + scriptName + EXTENSION);
+            //StreamReader sr = File.OpenText("../../../" + scriptName + EXTENSION);
             string s = String.Empty;
 
             //Path.Combine(basePath, filePath);
@@ -64,11 +145,9 @@ namespace PuppetMaster
              * interruptions
              */
 
-            while ((s = sr.ReadLine()) != null)
+            /*while ((s = sr.ReadLine()) != null)
             {
                 string[] input = s.Split(' ');
-
-                string ferf = input[0];
 
                 switch (input[0])
                 {
@@ -103,7 +182,7 @@ namespace PuppetMaster
                         break;
                 }
                 //do minimal amount of work here
-            }
+            }*/
         }
 
         public void processWorker(string[] input)
@@ -113,6 +192,7 @@ namespace PuppetMaster
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.FileName = "Cluster.exe";
                 startInfo.Arguments = input[1] + " " + input[3];
+                NewWorkerEvent(input[3]);
                 Process.Start(startInfo);
             }
             else if (input.Length == 5)
@@ -120,6 +200,7 @@ namespace PuppetMaster
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.FileName = "Cluster.exe";
                 startInfo.Arguments = input[1] + " " + input[3] + " " + input[4];
+                NewWorkerEvent(input[3]);
                 Process.Start(startInfo);
             }
             else
@@ -148,7 +229,9 @@ namespace PuppetMaster
 
         private void processWait(string[] input)
         {
-            throw new NotImplementedException();
+            // in seconds
+            int waitTime = Convert.ToInt32(input[1]) * 1000;
+            System.Threading.Thread.Sleep(waitTime);
         }
 
         private void processStatus(string[] input)
@@ -163,13 +246,19 @@ namespace PuppetMaster
 
         private void processFreezew(string[] input)
         {
-            string url = input[1];
+            string nodeID = input[1];
 
-            // TODO see if it's already freezed
+            if (nodeList.Count > 0)
+            {
+                string url = nodeList[0].URL;
+                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                //node.freeze(nodeID);
+            }
+            else
+            {
+                MessageBox.Show("ERROR: Couldn't contact cluster");
+            }
 
-            //disconnects node with url
-            NodeStatus nodeS = nodeList[url];
-            nodeS.node.disconect(url);
         }
 
         private void processUnfreezew(string[] input)
@@ -191,10 +280,26 @@ namespace PuppetMaster
         {
             throw new NotImplementedException();
         }
+    }
 
 
+    class NodeData
+    {
+        public string url;
 
+        public NodeData(string url)
+        {
+            this.url = url;
+
+        }
+
+        public string URL
+        {
+            get { return this.url; }
+
+        }
 
 
     }
+
 }
