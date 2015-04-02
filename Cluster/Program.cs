@@ -41,7 +41,8 @@ namespace Padi.Cluster
                 input = System.Console.ReadLine();
                 if (input == "kill")
                     break;
-                node.submit(3, null, args[1]);
+                int splits = Int16.Parse(input);
+                node.submit(splits, null, args[1]);
             }
 
             node = null;

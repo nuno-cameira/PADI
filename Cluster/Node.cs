@@ -9,6 +9,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using ThreadPool;
 using System.Reflection;
+using System.Threading;
 
 namespace Padi.Cluster
 {
@@ -27,12 +28,13 @@ namespace Padi.Cluster
         private readonly TcpChannel channel = null;
         private readonly string url = null;
         private readonly int id;
+        private bool isBusy;
 
         private ThrPool workThr = null;
         private List<Job> jobs; //job queue
 
         //Cluster status Variables
-        private Dictionary<string, NodeStatus> cluster = null;
+        private Dictionary<string, INode> cluster = null;
         private INode tracker = null;
         private string trkUrl = "";
 
@@ -58,6 +60,7 @@ namespace Padi.Cluster
 
         public bool IsTracker { get { return this.trkUrl.Equals(this.url); } }
 
+        public bool IsBusy { get { return this.isBusy; } }
         #endregion
 
 
@@ -73,8 +76,9 @@ namespace Padi.Cluster
             this.channel = new TcpChannel(port);
             this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/Node";
             this.trkUrl = this.url;
-            this.cluster = new Dictionary<string, NodeStatus>();
+            this.cluster = new Dictionary<string, INode>();
             this.tracker = this;
+            this.isBusy = false;
 
             this.workThr = new ThrPool(10, 50);
             this.id = id;
@@ -185,7 +189,7 @@ namespace Padi.Cluster
         private void tryPromote()
         {
             string lowestURL = this.URL;
-            foreach (KeyValuePair<string, NodeStatus> entry in cluster)
+            foreach (KeyValuePair<string, INode> entry in cluster)
             {
                 if (entry.Key.GetHashCode() < this.URL.GetHashCode())
                 {
@@ -213,13 +217,13 @@ namespace Padi.Cluster
                 if (!this.IsTracker)
                 {
                     Console.WriteLine("What?\n Worker is evolving!");
-                    Dictionary<string, NodeStatus> newCluster = new Dictionary<string, NodeStatus>();
-                    foreach (KeyValuePair<string, NodeStatus> entry in cluster)
+                    Dictionary<string, INode> newCluster = new Dictionary<string, INode>();
+                    foreach (KeyValuePair<string, INode> entry in cluster)
                     {
 
                         INode node = (INode)Activator.GetObject(typeof(INode), entry.Key);
 
-                        newCluster.Add(entry.Key, new NodeStatus(node, entry.Value.isWorking));
+                        newCluster.Add(entry.Key, node);
                     }
 
                     this.cluster = newCluster;
@@ -250,7 +254,7 @@ namespace Padi.Cluster
             if (url == this.trkUrl)
                 node = this.tracker;
             else
-                node = cluster[url].node;
+                node = cluster[url];
 
             //Checks if proxy exists
             if (node == null)
@@ -286,7 +290,7 @@ namespace Padi.Cluster
         /// <param name="warnDisconections"></param>
         private void clusterAction(ClusterHandler onSucess)
         {
-            clusterAction(onSucess, true, false);
+            clusterAction(onSucess, true);
         }
 
         /// <summary>
@@ -294,22 +298,22 @@ namespace Padi.Cluster
         /// </summary>
         /// <param name="onSucess">Delegate function to call for each Node in the cluster</param>
         /// <param name="warnDisconections">Warn the nodes of eventual disconections</param>
-        private void clusterAction(ClusterHandler onSucess, bool incTrack, bool freeOnly)
+        private void clusterAction(ClusterHandler onSucess, bool incTrack)
         {
             List<string> disconected = new List<string>();
 
 
-            foreach (KeyValuePair<string, NodeStatus> entry in cluster)
+            foreach (KeyValuePair<string, INode> entry in cluster)
             {
-                if (freeOnly && entry.Value.isWorking)
-                    continue;
-
+                INode node = entry.Value;
+                if (node == null)
+                    node = (INode)Activator.GetObject(typeof(INode), entry.Key);
 
                 this.workThr.AssyncInvoke(() =>
                 {
                     try
                     {
-                        onSucess(entry.Value.node);
+                        onSucess(node);
                     }
                     catch
                     {
@@ -364,19 +368,14 @@ namespace Padi.Cluster
 
                 clusterAction((node) =>
                 {
-                    Job job = jobs[0];
-                    if (job != null)
-                    {
-                        //Assign specific job to each node
-                        if (job.hasSplits())
-                            node.doWork(job.assignSplit(node.URL), mapper, clientUrl);
+                    //Assign split to available node
+                    assignTaskTo(node);
 
-                        //Inform all nodes about new job
-                        node.onJobReceived(splits, mapper, clientUrl);
-                    }
+                    //Inform all nodes about new job
+                    node.onJobReceived(splits, mapper, clientUrl);
 
                     return null;
-                }, false, true);
+                }, false);
             }
             else
             {
@@ -388,7 +387,22 @@ namespace Padi.Cluster
 
         public bool doWork(int split, byte[] mapper, string clientUrl)
         {
-            Console.WriteLine("Node::doWork(" + split + " , mapper , " + clientUrl + ")");
+            //Node is now doing work
+            this.isBusy = true;
+
+            this.workThr.AssyncInvoke(() =>
+            {
+                clusterAction((node) => { node.onSplitStart(this.url, split, clientUrl); return null; });
+                Thread.Sleep(60000);
+                
+                //Node is available for new work
+                this.isBusy = false;
+
+                //Report we're done with the task
+                clusterAction((node) => { node.onSplitDone(this.url); return null; });
+                nodeAction((trk) => { trk.onSplitDone(this.url); return null; }, this.trkUrl);
+
+            });
             return true;
         }
 
@@ -416,32 +430,55 @@ namespace Padi.Cluster
 
         #endregion
 
+
+
+
+        #region "Tracker"
+
+
+
+
+
+        private bool assignTaskTo(INode node)
+        {
+            foreach (Job job in this.jobs)
+            {
+
+                if (job.hasSplits() && !node.IsBusy)
+                {
+                    node.doWork(job.assignSplit(node.URL), job.Mapper, job.Client);
+                    return true;
+                }
+            }
+            return false;
+        }
+        #endregion
+
+
         #region "Events"
         public void onClusterIncrease(string peer)
         {
-            INode node = null;
-            if (this.IsTracker)
-            {
+            INode newNode = null;
 
-                node = (INode)Activator.GetObject(typeof(INode), peer);
+            //Get proxy to new node 
+            if (this.IsTracker) { newNode = (INode)Activator.GetObject(typeof(INode), peer); }
 
-                foreach (Job job in this.jobs)
-                {
+            //Add New node to cluster
+            lock (cluster) { if (!cluster.ContainsKey(peer)) { cluster.Add(peer, newNode); } }
 
-                    if (job.hasSplits())
-                    {
+            //Check if theres available jobs for him   
+            if (this.IsTracker) { nodeAction((node) => { return assignTaskTo(node); }, peer); }
 
-                        node.doWork(job.assignSplit(peer), job.Mapper, job.Client);
-                        break;
-                    }
-                }
-            }
-
-            lock (cluster) { if (!cluster.ContainsKey(peer)) { cluster.Add(peer, new NodeStatus(node)); } }
+            //send event
             if (JoinEvent != null) { JoinEvent(peer); }
         }
+
+
         public void onClusterDecrease(string peer)
         {
+            //TODO: Check if node was doing a job 
+            //if so retask it
+
             lock (cluster) { cluster.Remove(peer); }
             if (DisconectedEvent != null) DisconectedEvent(peer);
         }
@@ -454,18 +491,41 @@ namespace Padi.Cluster
         }
 
 
-        public void onSplitDone(string peer) { }
-        public void onSplitStart(string peer, int split, string clientUrl) { }
+        public void onSplitDone(string peer)
+        {
+            Console.WriteLine("onSplitDone(" + peer + ")");
+
+            if (this.IsTracker)
+            {
+                //Check if theres available jobs
+                nodeAction((node) => { return assignTaskTo(node); }, peer);
+            }
+        }
+        public void onSplitStart(string peer, int split, string clientUrl)
+        {
+            Console.WriteLine("onSplitStart(" + peer + ", " + split + ", " + clientUrl + ")");
+        }
 
 
         public void onJobDone(string clientUrl) { }
         public void onJobReceived(int splits, byte[] mapper, string clientUrl)
         {
-            Console.WriteLine("onJobReceived");
+            Console.WriteLine("onJobReceived(" + splits + ",mapper ," + clientUrl + ")");
+
             //Make a new job
             Job job = new Job(splits, mapper, clientUrl);
             jobs.Add(job);
+
+
+            if (this.IsTracker)
+            {
+                //Assign a job to available nodes
+                clusterAction((node) => { return assignTaskTo(node); }, false);
+            }
+
         }
+
+
 
 
     }
@@ -474,25 +534,6 @@ namespace Padi.Cluster
 
 
 
-
-    class NodeStatus
-    {
-        public INode node;
-        public bool isWorking;
-        //public  TIMESPAMP
-
-        public NodeStatus(INode node)
-        {
-            this.node = node;
-            this.isWorking = false;
-        }
-
-        public NodeStatus(INode node, bool isWorking)
-        {
-            this.node = node;
-            this.isWorking = isWorking;
-        }
-    }
 
 
 }

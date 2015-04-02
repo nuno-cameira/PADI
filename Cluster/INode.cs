@@ -8,6 +8,7 @@ namespace Padi.Cluster
         //Cluster Properties
         string URL { get; }
         int ID { get; }
+        bool IsBusy { get; }
 
         //Cluster Actions
         ClusterReport join(string nodeUrl);
