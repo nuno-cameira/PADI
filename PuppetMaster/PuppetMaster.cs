@@ -54,9 +54,9 @@ namespace PuppetMaster
             {
                 this.scriptStreamReader = File.OpenText("../../../" + scriptName + EXTENSION);
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException e)
             {
-                MessageBox.Show("File doesn't exist");
+                throw e;
             }
         }
 
