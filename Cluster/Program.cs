@@ -42,7 +42,7 @@ namespace Padi.Cluster
                 if (input == "kill")
                     break;
                 int splits = Int16.Parse(input);
-                node.submit(splits, null, args[1]);
+                node.submit(splits, null, "", args[1]);
             }
 
             node = null;

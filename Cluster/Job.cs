@@ -13,15 +13,16 @@ namespace Padi.Cluster
         private Dictionary<int, string> workAssignment;
         private List<int> splitsDone;
         private string clientUrl;
+        private string className;
 
-
-        internal Job(int splits, byte[] mapper, string clientUrl)
+        internal Job(int splits, byte[] mapper, string className, string clientUrl)
         {
             this.splits = splits;
             this.mapper = mapper;
             this.clientUrl = clientUrl;
             this.workAssignment = new Dictionary<int, string>();
             this.splitsDone = new List<int>();
+            this.className = className;
         }
 
 
@@ -80,6 +81,8 @@ namespace Padi.Cluster
         internal byte[] Mapper { get { return this.mapper; } }
 
         internal string Client { get { return this.clientUrl; } }
+
+        internal string ClassName { get { return this.className; } }
     }
 
 
