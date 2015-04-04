@@ -8,6 +8,6 @@ namespace Padi.SharedModel
 {
     public interface IWorker
     {
-        void submit(int splits, byte[] mapper, string clientUrl);
+        void submit(int splits, byte[] code, string className, string clientUrl);
     }
 }

@@ -10,10 +10,11 @@ namespace Padi.User
     {
         static void Main(string[] args)
         {           
-            //DEBUG
+            /*DEBUG CODE
             UserApplication userApp = new UserApplication();
             userApp.Init("entryURL");
-            userApp.Submit("input", "output", 10, "class", "dll");
+            userApp.Submit("test.txt", "/output", 5, "class", "dll");
+            END DEBUG CODE*/
         }
     }
 }

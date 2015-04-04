@@ -29,7 +29,7 @@ namespace Padi.SharedModel
        /// </summary>
        /// <param name="splitNumber"></param>
        /// <returns></returns>
-        string returnSplit(int splitNumber);
+        byte[] returnSplit(int splitNumber);
 
     }
 }

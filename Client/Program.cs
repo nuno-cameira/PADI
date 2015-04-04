@@ -10,7 +10,7 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            Client client = null; ;
+            Client client = null;
 
             if (args.Length != 1)
             {
