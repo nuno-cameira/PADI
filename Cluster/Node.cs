@@ -10,6 +10,7 @@ using System.Runtime.Remoting;
 using ThreadPool;
 using System.Reflection;
 using System.Threading;
+using System.IO;
 
 namespace Padi.Cluster
 {
@@ -390,15 +391,44 @@ namespace Padi.Cluster
         }
 
 
-        public bool doWork(int split, byte[] mapper, string className, string clientUrl)
+        public bool doWork(int split, byte[] code, string className, string clientUrl)
         {
             //Node is now doing work
             this.isBusy = true;
 
             this.workThr.AssyncInvoke(() =>
             {
+                //inform everyone we're starting to do work on this split
                 clusterAction((node) => { node.onSplitStart(this.url, split, clientUrl); return null; });
                 Thread.Sleep(60000);
+
+                //TODO!!!!!!!!!!!!!!!!!!!!!!!!!!
+                if (false)
+                {
+                    //Instatiates mapper from received code
+                    IMapper mapper = loadMapper(code, className);
+
+                    //Contact client and request content
+                    IClient client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
+                    byte[] splitCByte = client.returnSplit(split);
+
+                    string splitContent = System.Text.Encoding.UTF8.GetString(splitCByte);
+
+                    IList<KeyValuePair<string, string>> map;
+
+                    //Map each line
+                    using (StringReader reader = new StringReader(splitContent))
+                    {
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            IList<KeyValuePair<string, string>> newL = mapper.Map(line);
+
+
+                        }
+                    }
+                }//END IF (REMOVE ENVENTUALLY)
+
 
                 //Node is available for new work
                 this.isBusy = false;
@@ -513,7 +543,7 @@ namespace Padi.Cluster
 
 
         public void onJobDone(string clientUrl) { }
-        public void onJobReceived(int splits, byte[] mapper, string  className, string clientUrl)
+        public void onJobReceived(int splits, byte[] mapper, string className, string clientUrl)
         {
             Console.WriteLine("onJobReceived(" + splits + ",mapper ," + clientUrl + ")");
 
