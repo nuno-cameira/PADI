@@ -35,6 +35,7 @@ namespace Padi.Cluster
         private readonly string url = null;
         private readonly int id;
         private bool isBusy;
+        private bool haltWork = false; //Flag to stop work
 
         private ThrPool workThr = null;
         private List<Job> jobs; //job queue
@@ -390,6 +391,9 @@ namespace Padi.Cluster
             }
         }
 
+        private static EventWaitHandle halt =
+     new EventWaitHandle(false, EventResetMode.AutoReset);
+
 
         public bool doWork(int split, byte[] code, string className, string clientUrl)
         {
@@ -400,7 +404,22 @@ namespace Padi.Cluster
             {
                 //inform everyone we're starting to do work on this split
                 clusterAction((node) => { node.onSplitStart(this.url, split, clientUrl); return null; });
-                Thread.Sleep(60000);
+                int i = 100;
+                while (i > 0)
+                {
+                    if (haltWork) {
+                        Console.WriteLine("Halting...");
+                        halt.WaitOne();
+                        Console.WriteLine("Preparing thread...");
+                        halt.Reset();
+                        Console.WriteLine("Resuming...");
+                    }
+
+
+                    Console.WriteLine("Timmy " + i);
+                    Thread.Sleep(2500);
+                    i--;
+                }
 
                 //TODO!!!!!!!!!!!!!!!!!!!!!!!!!!
                 if (false)
@@ -440,6 +459,53 @@ namespace Padi.Cluster
             });
             return true;
         }
+
+       
+        public void freezW(int id) {
+            if (id == this.ID) {
+               
+                    haltWork = true;
+                    
+               
+            }
+            else
+            {
+                if (this.IsTracker)
+                {
+
+                    clusterAction((node) => { if (node.ID == id) { node.freezW(id); } return null; }, false);
+                }
+                else
+                {
+                    nodeAction((trk) => { trk.freezW(id); return null; }, this.trkUrl);
+                }
+
+            }
+        }
+
+
+        public void unFreezW(int id) {
+            if (id == this.ID)
+            {
+                Console.WriteLine("unFreezW()");
+                this.haltWork = false;
+                halt.Set();
+            }
+            else
+            {
+                if (this.IsTracker)
+                {
+
+                    clusterAction((node) => { if (node.ID == id) { node.unFreezW(id); } return null; }, false);
+                }
+                else
+                {
+                    nodeAction((trk) => { trk.unFreezW(id); return null; }, this.trkUrl);
+                }
+
+            }
+        }
+
 
 
         private IMapper loadMapper(byte[] code, string className)

@@ -15,6 +15,8 @@ namespace Padi.Cluster
         void disconect(string peer);
         void promote();
         bool doWork(int split, byte[] mapper, string className, string clientUrl);//"Submit" do Tracker
+        void freezW(int id);
+        void unFreezW(int id);
 
         //Cluster Events
         void onTrackerChange(string peer);
