@@ -19,6 +19,7 @@ namespace PuppetMaster
 
         PuppetMaster pm = new PuppetMaster();
 
+        delegate void Invoke();
         public Form1()
         {
             InitializeComponent();
@@ -26,7 +27,8 @@ namespace PuppetMaster
             pm.NewWorkerEvent += onNewWorkerEvent;
 
 
-
+            pm.JoinEvent += (url) => { listView2.Invoke((Invoke)delegate { listView2.Items.Add(new ListViewItem(url)); }); };
+            pm.DisconectedEvent += (url) => { listView2.Invoke((Invoke)delegate { listView2.Items.Remove(new ListViewItem(url)); }); };
             
 
 

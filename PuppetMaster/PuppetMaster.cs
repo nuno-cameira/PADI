@@ -197,7 +197,7 @@ namespace PuppetMaster
 
             if (input.Length == 4)
             {
-                startInfo.Arguments = id + " " + serviceUrl;
+                startInfo.Arguments = id + " " + serviceUrl +" +l "+this.url;
                 process.StartInfo = startInfo;
                 System.Threading.Thread.Sleep(500);
                 process.Start();
@@ -315,7 +315,9 @@ namespace PuppetMaster
 
 
 
-        #region "Cluster Events"
+      
+
+
         private void processFreezec(string[] input)
         {
             throw new NotImplementedException();
@@ -327,39 +329,52 @@ namespace PuppetMaster
         }
 
 
+
+
+        #region "Cluster Events"
+        public event JoinEventHandler JoinEvent;
+        public event DisconectedEventHandler DisconectedEvent;
+        public event TrackerChangeEventHandler TrackerChangeEvent;
+        public event WorkStartEventHandler WorkStartEvent;
+        public event WorkEndEventHandler WorkEndEvent;
+        public event JobDoneEventHandler JobDoneEvent;
+        public event NewJobEventHandler NewJobEvent;
+
+
+
         public void reportJoinEvent(string sender, string newNode)
         {
-            throw new NotImplementedException();
+            if (JoinEvent!=null) JoinEvent(newNode);
         }
 
         public void reportDisconectionEvent(string sender, string oldNode)
         {
-            throw new NotImplementedException();
+            if (DisconectedEvent != null) DisconectedEvent(oldNode);
         }
 
         public void reportTrackerChangeEvent(string sender, string newTracker)
         {
-            throw new NotImplementedException();
+            if (TrackerChangeEvent != null) TrackerChangeEvent(newTracker);
         }
 
         public void reportWorkStartEvent(string sender, int split, string clientUrl)
         {
-            throw new NotImplementedException();
+            if (WorkStartEvent != null) WorkStartEvent(split, clientUrl);
         }
 
         public void reportWorkEndEvent(string sender, int split, string clientUrl)
         {
-            throw new NotImplementedException();
+            if (WorkEndEvent != null) WorkEndEvent(split, clientUrl);
         }
 
         public void reportJobDoneEvent(string sender, string clientUrl)
         {
-            throw new NotImplementedException();
+            if (JobDoneEvent != null) JobDoneEvent(clientUrl);
         }
 
         public void reportNewJobEvent(string sender, int splits, byte[] mapper, string classname, string clientUrl)
         {
-            throw new NotImplementedException();
+            if (NewJobEvent != null) NewJobEvent(splits, mapper, classname, clientUrl); 
         }
         #endregion
     }

@@ -19,7 +19,11 @@ namespace Padi.Cluster
 
             Node node;
 
-            if (args.Length == 2)
+
+
+
+
+            if (args.Length == 2 || args.Length == 4)
             {
                 node = new Node(int.Parse(args[0]), int.Parse(args[1]), false);
             }
@@ -76,6 +80,8 @@ namespace Padi.Cluster
 
         private static void addPuppetListener(Node node, string puppet)
         {
+            Console.WriteLine("addPuppetListener "+puppet);
+
             IPuppetMaster pMaster = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), puppet);
 
             string sender = node.URL;
