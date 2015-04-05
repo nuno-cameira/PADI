@@ -31,7 +31,7 @@ namespace PuppetMaster
         StreamReader scriptStreamReader = null;
         //public Dictionary<string, NodeData> nodeList = null;
         private List<NodeData> nodeList = new List<NodeData>();
-        string URL = string.Empty;
+        string url = string.Empty;
 
         // HARD CODED PUPPET PORT, CHANGE LATER!
         int puppetPort = 8999;
@@ -40,7 +40,7 @@ namespace PuppetMaster
         public PuppetMaster()
         {
             this.channel = new TcpChannel(puppetPort);
-            this.URL = "tcp://localhost:" + puppetPort + "/PuppetMaster";
+            this.url = "tcp://localhost:" + puppetPort + "/PuppetMaster";
             //this.nodeList = new Dictionary<string, NodeData>();
             this.nodeList = new List<NodeData>();
 
@@ -225,7 +225,7 @@ namespace PuppetMaster
             string url = input[2];
 
             IPuppetMaster master;
-            if (this.URL != url)
+            if (this.url != url)
                 master = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), url);
             else
                 master = this;
@@ -311,6 +311,11 @@ namespace PuppetMaster
             throw new NotImplementedException();
         }
 
+
+
+
+
+        #region "Cluster Events"
         private void processFreezec(string[] input)
         {
             throw new NotImplementedException();
@@ -320,6 +325,43 @@ namespace PuppetMaster
         {
             throw new NotImplementedException();
         }
+
+
+        public void reportJoinEvent(string sender, string newNode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void reportDisconectionEvent(string sender, string oldNode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void reportTrackerChangeEvent(string sender, string newTracker)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void reportWorkStartEvent(string sender, int split, string clientUrl)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void reportWorkEndEvent(string sender, int split, string clientUrl)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void reportJobDoneEvent(string sender, string clientUrl)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void reportNewJobEvent(string sender, int splits, byte[] mapper, string classname, string clientUrl)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
     }
 
 
@@ -339,7 +381,13 @@ namespace PuppetMaster
 
         }
 
-
     }
+
+
+
+
+
+
+    
 
 }

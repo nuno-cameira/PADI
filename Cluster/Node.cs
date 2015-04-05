@@ -20,6 +20,27 @@ namespace Padi.Cluster
     public delegate void JoinEventHandler(string url);
     //Delegate to handle the received messages
     public delegate void DisconectedEventHandler(string url);
+    //Delegate to handle the received messages
+    public delegate void TrackerChangeEventHandler(string url);
+
+    //Delegate to handle the received messages
+    public delegate void WorkStartEventHandler(int split, string clientUrl);
+
+    //Delegate to handle the received messages
+    public delegate void WorkEndEventHandler(int split, string clientUrl);
+
+    //Delegate to handle the received messages
+    public delegate void JobDoneEventHandler(string url);
+
+    //Delegate to handle the received messages
+    public delegate void NewJobEventHandler(int splits, byte[] mapper, string classname, string clientUrl);
+
+
+
+
+
+
+
     // A delegate to handle the calls to a node in the cluster
     public delegate object ClusterHandler(INode node);
 
@@ -48,6 +69,14 @@ namespace Padi.Cluster
         //Event
         public event JoinEventHandler JoinEvent;
         public event DisconectedEventHandler DisconectedEvent;
+        public event TrackerChangeEventHandler TrackerChangeEvent;
+        public event WorkStartEventHandler WorkStartEvent;
+        public event WorkEndEventHandler WorkEndEvent;
+        public event JobDoneEventHandler JobDoneEvent;
+        public event NewJobEventHandler NewJobEvent;
+
+
+
 
 
 
@@ -460,13 +489,13 @@ namespace Padi.Cluster
             return true;
         }
 
-       
+
         public void freezW(int id) {
             if (id == this.ID) {
-               
-                    haltWork = true;
-                    
-               
+
+                haltWork = true;
+
+
             }
             else
             {
