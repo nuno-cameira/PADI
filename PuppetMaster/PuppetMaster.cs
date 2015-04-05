@@ -53,7 +53,7 @@ namespace PuppetMaster
         {
             try
             {
-                this.scriptStreamReader = File.OpenText("../../../" + scriptName + EXTENSION);
+                this.scriptStreamReader = File.OpenText(scriptName);
             }
             catch (FileNotFoundException e)
             {
