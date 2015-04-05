@@ -10,12 +10,13 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using System.Windows.Forms;
+using Padi.SharedModel;
 
 
 namespace PuppetMaster
 {
 
-    //Delegate to handle the received messages
+    //Delegate to handle creation of new workers
     public delegate void NewWorkerHandler(string urlNode);
 
     class PuppetMaster : MarshalByRefObject, IPuppetMaster
@@ -187,21 +188,31 @@ namespace PuppetMaster
 
         public void processWorker(string[] input)
         {
+            string id = input[1];
+            string serviceUrl = input[3];
+
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = "Cluster.exe";
+
             if (input.Length == 4)
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.FileName = "Cluster.exe";
-                startInfo.Arguments = input[1] + " " + input[3];
-                NewWorkerEvent(input[3]);
-                Process.Start(startInfo);
+                startInfo.Arguments = id + " " + serviceUrl;
+                process.StartInfo = startInfo;
+                System.Threading.Thread.Sleep(500);
+                process.Start();
+                NewWorkerEvent(serviceUrl);
             }
             else if (input.Length == 5)
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.FileName = "Cluster.exe";
-                startInfo.Arguments = input[1] + " " + input[3] + " " + input[4];
-                NewWorkerEvent(input[3]);
-                Process.Start(startInfo);
+
+                string entryUrl = input[4];
+
+                startInfo.Arguments = id + " " + serviceUrl + " " + entryUrl;
+                process.StartInfo = startInfo;            
+                System.Threading.Thread.Sleep(500);
+                process.Start();
+                NewWorkerEvent(serviceUrl);
             }
             else
             {
@@ -224,7 +235,36 @@ namespace PuppetMaster
 
         private void processSubmit(string[] input)
         {
-            throw new NotImplementedException();
+
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = "Client.exe";
+            startInfo.Arguments = input[1];
+            Process p = Process.Start(startInfo);
+            try
+            {
+                // TODO HARDCODED PORT, CHANGE LATER!
+                string url = "tcp://" + Util.LocalIPAddress() + ":" + "10001" + "/Client";
+                IClient c = (IClient)Activator.GetObject(typeof(IClient), url);
+
+                string inputPath = input[2];
+                string outputPath = input[3];
+                int splits = Convert.ToInt32(input[4]);
+                string className = "some class";
+                string dllPath = input[6];
+
+                c.Submit(inputPath, outputPath, splits, className, dllPath);
+
+                //IClient c = (IClient)p.CreateObjRef(typeof(IClient));
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("ERROR: " + e.ToString());
+            }
+
+
+            MessageBox.Show("SUBMIT DONE");
+
+            //throw new NotImplementedException();
         }
 
         private void processWait(string[] input)

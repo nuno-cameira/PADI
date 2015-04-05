@@ -42,6 +42,8 @@ namespace Client
 
         public void Submit(string inputPath, string outputPath, int splits, string className, string dllPath)
         {
+
+            Console.WriteLine("Submition Started");
             //Splits the file and creates a 'Splits' dictionary
             splitFile(inputPath, splits);
 
@@ -52,19 +54,36 @@ namespace Client
             }
             END DEBUG CODE*/
 
-            this.outputPath = outputPath;           
+            this.outputPath = outputPath;
+            byte[] mapperCode = null;
 
-            byte[] mapperCode = File.ReadAllBytes(dllPath);
+            try
+            {
+                mapperCode = File.ReadAllBytes(dllPath);
+            }
+            catch (FileNotFoundException)
+                {
+                    Console.WriteLine("ERROR: Input dll path doesn't exist");
+                }
 
             //Submits the job to the known worker node
-            this.localWorker.submit(splits, mapperCode, className, this.url);         
+            this.localWorker.submit(splits, mapperCode, className, this.url);
+            Console.WriteLine("Submition Ended");
 
         }
 
         private void splitFile(string inputPath, int splits)
         {
+            byte[] file = null;
 
-            byte[] file = File.ReadAllBytes(inputPath);
+            try
+            {
+                file = File.ReadAllBytes(inputPath);
+            }
+            catch (FileNotFoundException)
+                {
+                    Console.WriteLine("ERROR: Input file path doesn't exist");
+                }
 
             int chunkSize = file.Length / splits;
             byte[] buffer = new byte[chunkSize];

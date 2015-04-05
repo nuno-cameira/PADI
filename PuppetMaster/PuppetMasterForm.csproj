@@ -81,6 +81,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Client\Client.csproj">
+      <Project>{7a82a7b0-e91d-4c7f-86cb-8c498073a81c}</Project>
+      <Name>Client</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Cluster\Cluster.csproj">
       <Project>{9e62b194-e2fe-4508-b8ef-08cdad2ef2d4}</Project>
       <Name>Cluster</Name>
