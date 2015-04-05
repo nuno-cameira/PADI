@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using PuppetMaster;
 namespace Padi.Cluster
 {
     class Program
@@ -29,7 +29,18 @@ namespace Padi.Cluster
             }
 
 
+            string s;
+            for (int i = 0; i < args.Length; i++)
+            {
+                s = args[i];
 
+                if (s.Equals("+l") && i + 1 < args.Length)
+                {
+                    addPuppetListener(node, args[i + 1]);
+                    break;
+
+                }
+            }
             node.JoinEvent += onJoinEvent;
             node.DisconectedEvent += onDisconectedEvent;
 
@@ -42,7 +53,7 @@ namespace Padi.Cluster
             node.submit(splits, null, "", args[1]);
 
             int t = 2;
-            while (t!=0)
+            while (t != 0)
             {
                 input = System.Console.ReadLine();
                 node.freezW(2);
@@ -52,13 +63,31 @@ namespace Padi.Cluster
                 t--;
 
             }
-           
+
 
 
             node = null;
             Console.WriteLine("Server killed.");
             Environment.Exit(0);
         }
+
+
+
+
+        private static void addPuppetListener(Node node, string puppet)
+        {
+            IPuppetMaster pMaster = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), puppet);
+
+            string sender = node.URL;
+            node.JoinEvent += (url) => { pMaster.reportJoinEvent(sender, url); };
+            node.DisconectedEvent += (url) => { pMaster.reportDisconectionEvent(sender, url); };
+            node.TrackerChangeEvent += (url) => { pMaster.reportTrackerChangeEvent(sender, url); };
+            node.WorkStartEvent += (split, clientUrl) => { pMaster.reportWorkStartEvent(sender, split, clientUrl); };
+            node.WorkEndEvent += (split, clientUrl) => { pMaster.reportWorkEndEvent(sender, split, clientUrl); };
+            node.JobDoneEvent += (url) => { pMaster.reportJobDoneEvent(sender, url); };
+            node.NewJobEvent += (splits, mapper, classname, clientUrl) => { pMaster.reportNewJobEvent(sender, splits, mapper, classname, clientUrl); };
+        }
+
 
 
 
