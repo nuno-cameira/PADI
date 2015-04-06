@@ -249,7 +249,7 @@ namespace PuppetMaster
                 string inputPath = input[2];
                 string outputPath = input[3];
                 int splits = Convert.ToInt32(input[4]);
-                string className = "some class";
+                string className = input[5];
                 string dllPath = input[6];
 
                 c.Submit(inputPath, outputPath, splits, className, dllPath);

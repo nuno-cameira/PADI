@@ -1,4 +1,4 @@
 WORKER 1 tcp://localhost:8999/PuppetMaster 8182
 WORKER 2 tcp://localhost:8999/PuppetMaster 8282 tcp://localhost:8182/Node
 WORKER 3 tcp://localhost:8999/PuppetMaster 8382 tcp://localhost:8182/Node
-SUBMIT tcp://localhost:8182/Node ../../../test.txt output 3 classname ../../../LibMapper.dll
+SUBMIT tcp://localhost:8182/Node ../../../test.txt ../../../ 3 Mapper ../../../LibMapper.dll

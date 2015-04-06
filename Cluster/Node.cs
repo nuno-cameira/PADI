@@ -434,7 +434,7 @@ namespace Padi.Cluster
                 //inform everyone we're starting to do work on this split
                 clusterAction((node) => { node.onSplitStart(this.url, split, clientUrl); return null; });
                 int i = 100;
-                while (i > 0)
+                while (/*i > 0*/ false)
                 {
                     if (haltWork) {
                         Console.WriteLine("Halting...");
@@ -450,32 +450,64 @@ namespace Padi.Cluster
                     i--;
                 }
 
-                //TODO!!!!!!!!!!!!!!!!!!!!!!!!!!
-                if (false)
+
+                //Retrieves the Class Type
+                Type type = loadMapper(code, className);
+
+                //Instatiates mapper from received code
+                object ClassObj = Activator.CreateInstance(type);
+
+                //Contact client and request content
+                IClient client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
+                byte[] splitCByte = client.returnSplit(split);
+
+                string splitContent = System.Text.Encoding.UTF8.GetString(splitCByte);
+
+                Dictionary<string, string> groupedKeys = new Dictionary<string, string>();
+
+                //Map each line
+                using (StringReader reader = new StringReader(splitContent))
                 {
-                    //Instatiates mapper from received code
-                    IMapper mapper = loadMapper(code, className);
-
-                    //Contact client and request content
-                    IClient client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
-                    byte[] splitCByte = client.returnSplit(split);
-
-                    string splitContent = System.Text.Encoding.UTF8.GetString(splitCByte);
-
-                    IList<KeyValuePair<string, string>> map;
-
-                    //Map each line
-                    using (StringReader reader = new StringReader(splitContent))
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        string line;
-                        while ((line = reader.ReadLine()) != null)
+
+                        object[] args = new object[] { line };
+                        object resultObject = type.InvokeMember("Map",
+                          BindingFlags.Default | BindingFlags.InvokeMethod,
+                               null,
+                               ClassObj,
+                               args);
+                        IList<KeyValuePair<string, string>> result = (IList<KeyValuePair<string, string>>)resultObject;
+
+                        foreach (KeyValuePair<string, string> p in result)
                         {
-                            IList<KeyValuePair<string, string>> newL = mapper.Map(line);
-
-
+                            if (groupedKeys.ContainsKey(p.Key))
+                            {
+                                groupedKeys[p.Key] += " " + p.Value;
+                            }
+                            else
+                            {
+                                groupedKeys[p.Key] = p.Value;
+                            }
                         }
                     }
-                }//END IF (REMOVE ENVENTUALLY)
+                }
+
+                var array = groupedKeys.Keys.ToArray();
+
+                Array.Sort(array);
+
+                string returnString = null;
+
+                // Loop through keys.
+                foreach (var key in array)
+                {
+                    returnString += key + ": [" + groupedKeys[key] + "]\n";
+                }
+
+                //Return the result to the client
+                client.onSplitDone(returnString, split);
 
 
                 //Node is available for new work
@@ -537,7 +569,7 @@ namespace Padi.Cluster
 
 
 
-        private IMapper loadMapper(byte[] code, string className)
+        private Type loadMapper(byte[] code, string className)
         {
             Assembly assembly = Assembly.Load(code);
 
@@ -549,7 +581,7 @@ namespace Padi.Cluster
                     if (type.FullName.EndsWith("." + className))
                     {
                         // create an instance of the object
-                        return (IMapper)Activator.CreateInstance(type);
+                        return type;
                     }
                 }
             }
