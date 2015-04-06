@@ -60,10 +60,10 @@ namespace Padi.Cluster
             while (t != 0)
             {
                 input = System.Console.ReadLine();
-                node.freezW(2);
+                node.freezeW(2);
 
                 input = System.Console.ReadLine();
-                node.unFreezW(2);
+                node.unFreezeW(2);
                 t--;
 
             }

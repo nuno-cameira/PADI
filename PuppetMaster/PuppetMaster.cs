@@ -26,7 +26,6 @@ namespace PuppetMaster
         public event NewWorkerHandler NewWorkerEvent;
 
         //PuppetMaster Variables
-        const string EXTENSION = ".txt";
         private readonly TcpChannel channel = null;
         StreamReader scriptStreamReader = null;
         //public Dictionary<string, NodeData> nodeList = null;
@@ -260,11 +259,6 @@ namespace PuppetMaster
             {
                 MessageBox.Show("ERROR: " + e.ToString());
             }
-
-
-            MessageBox.Show("SUBMIT DONE");
-
-            //throw new NotImplementedException();
         }
 
         private void processWait(string[] input)
@@ -276,23 +270,44 @@ namespace PuppetMaster
 
         private void processStatus(string[] input)
         {
-            throw new NotImplementedException();
+            if (nodeList.Count > 0)
+            {
+                string url = nodeList[0].URL;
+                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                //node.status();
+            }
+            else
+            {
+                MessageBox.Show("ERROR: Couldn't contact cluster");
+            }
         }
 
         private void processSloww(string[] input)
         {
-            throw new NotImplementedException();
-        }
-
-        private void processFreezew(string[] input)
-        {
-            string nodeID = input[1];
+            int  nodeID = Convert.ToInt32(input[1]);
+            int time = Convert.ToInt32(input[2]);
 
             if (nodeList.Count > 0)
             {
                 string url = nodeList[0].URL;
                 INode node = (INode)Activator.GetObject(typeof(INode), url);
-                //node.freeze(nodeID);
+                //node.slowW(nodeID, time);
+            }
+            else
+            {
+                MessageBox.Show("ERROR: Couldn't contact cluster");
+            }
+        }
+
+        private void processFreezew(string[] input)
+        {
+            int nodeID = Convert.ToInt32(input[1]);
+
+            if (nodeList.Count > 0)
+            {
+                string url = nodeList[0].URL;
+                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                //node.freezeW(nodeID);
             }
             else
             {
@@ -303,29 +318,51 @@ namespace PuppetMaster
 
         private void processUnfreezew(string[] input)
         {
-            /*TODO do we need to save the state of the object 
-             * in order to load it again with the same state?
-             * or does it just come to life as a completly new object
-             */
+            int nodeID = Convert.ToInt32(input[1]);
 
-            throw new NotImplementedException();
+            if (nodeList.Count > 0)
+            {
+                string url = nodeList[0].URL;
+                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                //node.unFreezeW(nodeID);
+            }
+            else
+            {
+                MessageBox.Show("ERROR: Couldn't contact cluster");
+            }
+
         }
-
-
-
-
-
-      
-
 
         private void processFreezec(string[] input)
         {
-            throw new NotImplementedException();
+            int nodeID = Convert.ToInt32(input[1]);
+
+            if (nodeList.Count > 0)
+            {
+                string url = nodeList[0].URL;
+                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                //node.freezeC(nodeID);
+            }
+            else
+            {
+                MessageBox.Show("ERROR: Couldn't contact cluster");
+            }
         }
 
         private void processUnfreezec(string[] input)
         {
-            throw new NotImplementedException();
+            int nodeID = Convert.ToInt32(input[1]);
+
+            if (nodeList.Count > 0)
+            {
+                string url = nodeList[0].URL;
+                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                //node.unFreezeC(nodeID);
+            }
+            else
+            {
+                MessageBox.Show("ERROR: Couldn't contact cluster");
+            }
         }
 
 

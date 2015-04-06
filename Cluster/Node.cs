@@ -506,36 +506,54 @@ namespace Padi.Cluster
         }
 
 
-        public void freezW(int id)
+
+        public void freezeW(int id)
         {
-            if (id == this.ID)
+            if (!this.IsTracker && id == this.ID)
             {
-
+                Console.WriteLine("freezeW()");
                 haltWork = true;
-
-
             }
             else
             {
                 if (this.IsTracker)
                 {
-
-                    clusterAction((node) => { if (node.ID == id) { node.freezW(id); } return null; }, false);
+                    clusterAction((node) => { if (node.ID == id) { node.freezeW(id); } return null; }, false);
                 }
                 else
                 {
-                    nodeAction((trk) => { trk.freezW(id); return null; }, this.trkUrl);
+                    nodeAction((trk) => { trk.freezeW(id); return null; }, this.trkUrl);
                 }
-
             }
         }
 
 
-        public void unFreezW(int id)
+        public void freezeC(int id)
         {
-            if (id == this.ID)
+            if (this.IsTracker && id == this.ID) 
             {
-                Console.WriteLine("unFreezW()");
+                Console.WriteLine("freezeC()");
+                haltWork = true;
+            }
+            else
+            {
+                if (this.IsTracker)
+                {
+                    clusterAction((node) => { if (node.ID == id) { node.freezeC(id); } return null; }, false);
+                }
+                else
+                {
+                    nodeAction((trk) => { trk.freezeC(id); return null; }, this.trkUrl);
+                }
+            }
+        }
+
+
+        public void unFreezeW(int id)
+        {
+            if (!this.IsTracker && id == this.ID)
+            {
+                Console.WriteLine("unFreezeW()");
                 this.haltWork = false;
                 halt.Set();
             }
@@ -543,16 +561,84 @@ namespace Padi.Cluster
             {
                 if (this.IsTracker)
                 {
-
-                    clusterAction((node) => { if (node.ID == id) { node.unFreezW(id); } return null; }, false);
+                    clusterAction((node) => { if (node.ID == id) { node.unFreezeW(id); } return null; }, false);
                 }
                 else
                 {
-                    nodeAction((trk) => { trk.unFreezW(id); return null; }, this.trkUrl);
+                    nodeAction((trk) => { trk.unFreezeW(id); return null; }, this.trkUrl);
                 }
-
             }
         }
+
+
+        public void unFreezeC(int id)
+        {
+            if (this.IsTracker && id == this.ID)
+            {
+                Console.WriteLine("unFreezeC()");
+                this.haltWork = false;
+                halt.Set();
+            }
+            else
+            {
+                if (this.IsTracker)
+                {
+                    clusterAction((node) => { if (node.ID == id) { node.unFreezeC(id); } return null; }, false);
+                }
+                else
+                {
+                    nodeAction((trk) => { trk.unFreezeC(id); return null; }, this.trkUrl);
+                }
+            }
+        }
+
+
+
+        public void status() 
+        {
+            if (id == this.ID)
+            {
+                Console.WriteLine("status()");
+                // TODO print status stuff here
+            }
+            else
+            {
+                if (this.IsTracker)
+                {
+                    clusterAction((node) => { if (node.ID == id) { node.status(); } return null; }, false);
+                }
+                else
+                {
+                    nodeAction((trk) => { trk.status(); return null; }, this.trkUrl);
+                }
+            }
+        }
+
+
+        public void slowW(int id, int time) 
+        {
+            if (id == this.ID)
+            {
+                Console.WriteLine("slowW()");
+                this.haltWork = true;
+                System.Threading.Thread.Sleep(time*1000);
+                this.haltWork = false;
+                halt.Set();
+            }
+            else
+            {
+                if (this.IsTracker)
+                {
+                    clusterAction((node) => { if (node.ID == id) { node.slowW(id, time); } return null; }, false);
+                }
+                else
+                {
+                    nodeAction((trk) => { trk.slowW(id, time); return null; }, this.trkUrl);
+                }
+            }
+        }
+
+
         #endregion
 
 
