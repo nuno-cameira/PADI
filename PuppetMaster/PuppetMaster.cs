@@ -344,37 +344,37 @@ namespace PuppetMaster
 
         public void reportJoinEvent(string sender, string newNode)
         {
-            if (JoinEvent!=null) JoinEvent(newNode);
+            if (JoinEvent != null) JoinEvent(sender, newNode);
         }
 
         public void reportDisconectionEvent(string sender, string oldNode)
         {
-            if (DisconectedEvent != null) DisconectedEvent(oldNode);
+            if (DisconectedEvent != null) DisconectedEvent(sender, oldNode);
         }
 
         public void reportTrackerChangeEvent(string sender, string newTracker)
         {
-            if (TrackerChangeEvent != null) TrackerChangeEvent(newTracker);
+            if (TrackerChangeEvent != null) TrackerChangeEvent(sender, newTracker);
         }
 
-        public void reportWorkStartEvent(string sender, int split, string clientUrl)
+        public void reportWorkStartEvent(string sender, string peer, int split, string clientUrl)
         {
-            if (WorkStartEvent != null) WorkStartEvent(split, clientUrl);
+            if (WorkStartEvent != null) WorkStartEvent(sender, peer, split, clientUrl);
         }
 
-        public void reportWorkEndEvent(string sender, int split, string clientUrl)
+        public void reportWorkEndEvent(string sender, string peer)
         {
-            if (WorkEndEvent != null) WorkEndEvent(split, clientUrl);
+            if (WorkEndEvent != null) WorkEndEvent(sender, peer);
         }
 
         public void reportJobDoneEvent(string sender, string clientUrl)
         {
-            if (JobDoneEvent != null) JobDoneEvent(clientUrl);
+            if (JobDoneEvent != null) JobDoneEvent(sender, clientUrl);
         }
 
         public void reportNewJobEvent(string sender, int splits, byte[] mapper, string classname, string clientUrl)
         {
-            if (NewJobEvent != null) NewJobEvent(splits, mapper, classname, clientUrl); 
+            if (NewJobEvent != null) NewJobEvent(sender, splits, mapper, classname, clientUrl); 
         }
         #endregion
     }
@@ -402,6 +402,23 @@ namespace PuppetMaster
 
 
 
+    //Delegate to handle the received messages
+    public delegate void JoinEventHandler(string sender, string newNode);
+    //Delegate to handle the received messages
+    public delegate void DisconectedEventHandler(string sender , string oldNode);
+
+    //Delegate to handle the received messages
+    public delegate void TrackerChangeEventHandler(string sender, string newTracker);
+
+    //Delegate to handle the received messages
+    public delegate void WorkStartEventHandler(string sender, string peer, int split, string clientUrl);
+    //Delegate to handle the received messages
+    public delegate void WorkEndEventHandler(string sender, string peer);
+
+    //Delegate to handle the received messages
+    public delegate void JobDoneEventHandler(string sender, string url);
+    //Delegate to handle the received messages
+    public delegate void NewJobEventHandler(string sender, int splits, byte[] mapper, string classname, string clientUrl);
 
     
 

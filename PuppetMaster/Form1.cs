@@ -19,7 +19,7 @@ namespace PuppetMaster
 
         PuppetMaster pm = new PuppetMaster();
 
-        delegate void Invoke();
+        delegate void FormInvoke();
         public Form1()
         {
             InitializeComponent();
@@ -27,9 +27,98 @@ namespace PuppetMaster
             pm.NewWorkerEvent += onNewWorkerEvent;
 
 
-            pm.JoinEvent += (url) => { listView2.Invoke((Invoke)delegate { listView2.Items.Add(new ListViewItem(url)); }); };
-            pm.DisconectedEvent += (url) => { listView2.Invoke((Invoke)delegate { listView2.Items.Remove(new ListViewItem(url)); }); };
-            
+            pm.JoinEvent += (sender, url) =>
+            {
+                listView2.Invoke((FormInvoke)delegate
+                {
+                    ListViewItem item = new ListViewItem(url);
+                    item.SubItems.Add("No");
+                    item.SubItems.Add("No");
+                    item.SubItems.Add("-");
+                    item.SubItems.Add("-");
+
+
+                    listView2.Items.Add(item);
+
+
+                });
+            };
+            pm.DisconectedEvent += (sender, url) =>
+            {
+                listView2.Invoke((FormInvoke)delegate
+                {
+                    ListViewItem remove = null;
+                    foreach (ListViewItem l in listView2.Items)
+                    {
+                        Console.WriteLine(l.Text + "=?" + url);
+                        if (l.Text.Equals(url))
+                        {
+                            remove = l;
+                            break;
+                        }
+                    }
+
+                    if (remove != null)
+                        listView2.Items.Remove(remove);
+
+                });
+            };
+
+
+
+            pm.WorkStartEvent += (sender, peer, split, clientURL) =>
+            {
+                listView2.Invoke((FormInvoke)delegate
+                {
+                    ListViewItem updateIV = null;
+                    foreach (ListViewItem l in listView2.Items)
+                    {
+                        Console.WriteLine(l.Text + "=?" + peer);
+                        if (l.Text.Equals(peer))
+                        {
+                            updateIV = l;
+                            break;
+                        }
+                    }
+
+                    if (updateIV != null)
+                    {
+
+                        updateIV.SubItems[1].Text = "No";
+                        updateIV.SubItems[2].Text = "YES";
+                        updateIV.SubItems[3].Text = "" + split;
+                        updateIV.SubItems[4].Text = clientURL;
+                    }
+                });
+            };
+
+
+            pm.WorkEndEvent += (sender, peer) =>
+            {
+
+                listView2.Invoke((FormInvoke)delegate
+                {
+                    ListViewItem updateIV = null;
+                    foreach (ListViewItem l in listView2.Items)
+                    {
+                        Console.WriteLine(l.Text + "=?" + peer);
+                        if (l.Text.Equals(peer))
+                        {
+                            updateIV = l;
+                            break;
+                        }
+                    }
+
+                    if (updateIV != null)
+                    {
+
+                        updateIV.SubItems[1].Text = "No";
+                        updateIV.SubItems[2].Text = "No";
+                        updateIV.SubItems[3].Text = "-";
+                        updateIV.SubItems[4].Text = "-";
+                    }
+                });
+            };
 
 
         }
@@ -96,7 +185,8 @@ namespace PuppetMaster
             {
                 button_step.Enabled = false;
             }
-            else {
+            else
+            {
                 listView1.Items[step].Font = new Font(listView1.Font, FontStyle.Strikeout);
                 step++;
             }

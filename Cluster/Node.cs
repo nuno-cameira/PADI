@@ -17,21 +17,20 @@ namespace Padi.Cluster
 
 
     //Delegate to handle the received messages
-    public delegate void JoinEventHandler(string url);
+    public delegate void JoinEventHandler(string newNode);
     //Delegate to handle the received messages
-    public delegate void DisconectedEventHandler(string url);
-    //Delegate to handle the received messages
-    public delegate void TrackerChangeEventHandler(string url);
+    public delegate void DisconectedEventHandler(string oldNode);
 
     //Delegate to handle the received messages
-    public delegate void WorkStartEventHandler(int split, string clientUrl);
+    public delegate void TrackerChangeEventHandler(string newTracker);
 
     //Delegate to handle the received messages
-    public delegate void WorkEndEventHandler(int split, string clientUrl);
+    public delegate void WorkStartEventHandler(string sender, int split, string clientUrl);
+    //Delegate to handle the received messages
+    public delegate void WorkEndEventHandler(string peer);
 
     //Delegate to handle the received messages
     public delegate void JobDoneEventHandler(string url);
-
     //Delegate to handle the received messages
     public delegate void NewJobEventHandler(int splits, byte[] mapper, string classname, string clientUrl);
 
@@ -74,9 +73,6 @@ namespace Padi.Cluster
         public event WorkEndEventHandler WorkEndEvent;
         public event JobDoneEventHandler JobDoneEvent;
         public event NewJobEventHandler NewJobEvent;
-
-
-
 
 
 
@@ -433,29 +429,9 @@ namespace Padi.Cluster
             {
                 //inform everyone we're starting to do work on this split
                 clusterAction((node) => { node.onSplitStart(this.url, split, clientUrl); return null; });
-                int i = 100;
-                while (/*i > 0*/ false)
-                {
-                    if (haltWork) {
-                        Console.WriteLine("Halting...");
-                        halt.WaitOne();
-                        Console.WriteLine("Preparing thread...");
-                        halt.Reset();
-                        Console.WriteLine("Resuming...");
-                    }
+                nodeAction((trk) => { trk.onSplitStart(this.url, split, clientUrl); return null; }, this.trkUrl);
 
-
-                    Console.WriteLine("Timmy " + i);
-                    Thread.Sleep(2500);
-                    i--;
-                }
-
-
-                //Retrieves the Class Type
-                Type type = loadMapper(code, className);
-
-                //Instatiates mapper from received code
-                object ClassObj = Activator.CreateInstance(type);
+                IMapper mapper = Util.loadMapper(code, className);
 
                 //Contact client and request content
                 IClient client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
@@ -465,6 +441,8 @@ namespace Padi.Cluster
 
                 Dictionary<string, string> groupedKeys = new Dictionary<string, string>();
 
+
+
                 //Map each line
                 using (StringReader reader = new StringReader(splitContent))
                 {
@@ -472,13 +450,19 @@ namespace Padi.Cluster
                     while ((line = reader.ReadLine()) != null)
                     {
 
+                        if (haltWork)
+                        {
+                            Console.WriteLine("Halting...");
+                            halt.WaitOne();
+                            Console.WriteLine("Preparing thread...");
+                            halt.Reset();
+                            Console.WriteLine("Resuming...");
+                        }
+
+
                         object[] args = new object[] { line };
-                        object resultObject = type.InvokeMember("Map",
-                          BindingFlags.Default | BindingFlags.InvokeMethod,
-                               null,
-                               ClassObj,
-                               args);
-                        IList<KeyValuePair<string, string>> result = (IList<KeyValuePair<string, string>>)resultObject;
+
+                        IList<KeyValuePair<string, string>> result = mapper.Map(line);
 
                         foreach (KeyValuePair<string, string> p in result)
                         {
@@ -522,8 +506,10 @@ namespace Padi.Cluster
         }
 
 
-        public void freezW(int id) {
-            if (id == this.ID) {
+        public void freezW(int id)
+        {
+            if (id == this.ID)
+            {
 
                 haltWork = true;
 
@@ -545,7 +531,8 @@ namespace Padi.Cluster
         }
 
 
-        public void unFreezW(int id) {
+        public void unFreezW(int id)
+        {
             if (id == this.ID)
             {
                 Console.WriteLine("unFreezW()");
@@ -566,33 +553,7 @@ namespace Padi.Cluster
 
             }
         }
-
-
-
-        private Type loadMapper(byte[] code, string className)
-        {
-            Assembly assembly = Assembly.Load(code);
-
-            // Walk through each type in the assembly looking for our class
-            foreach (Type type in assembly.GetTypes())
-            {
-                if (type.IsClass == true)
-                {
-                    if (type.FullName.EndsWith("." + className))
-                    {
-                        // create an instance of the object
-                        return type;
-                    }
-                }
-            }
-
-            throw (new System.Exception("could not invoke method"));
-        }
-
-
         #endregion
-
-
 
 
         #region "Tracker"
@@ -650,6 +611,7 @@ namespace Padi.Cluster
         {
             Console.WriteLine("onTrackerChange");
             if (!this.IsTracker) { this.tracker = (INode)Activator.GetObject(typeof(INode), p); }
+            if (TrackerChangeEvent != null) TrackerChangeEvent(p);
         }
 
 
@@ -662,14 +624,26 @@ namespace Padi.Cluster
                 //Check if theres available jobs
                 nodeAction((node) => { return assignTaskTo(node); }, peer);
             }
+
+            //Send Event
+            if (WorkEndEvent != null) WorkEndEvent(peer);
+
+
         }
         public void onSplitStart(string peer, int split, string clientUrl)
         {
             Console.WriteLine("onSplitStart(" + peer + ", " + split + ", " + clientUrl + ")");
+
+            //Send Event
+            if (WorkStartEvent != null) WorkStartEvent(peer, split, clientUrl);
         }
 
 
-        public void onJobDone(string clientUrl) { }
+        public void onJobDone(string clientUrl) {
+
+            //Send Event
+            if (JobDoneEvent != null) JobDoneEvent(clientUrl);
+        }
         public void onJobReceived(int splits, byte[] mapper, string className, string clientUrl)
         {
             Console.WriteLine("onJobReceived(" + splits + ",mapper ," + clientUrl + ")");
@@ -685,6 +659,9 @@ namespace Padi.Cluster
                 clusterAction((node) => { return assignTaskTo(node); }, false);
             }
 
+
+            //Send Event
+            if (NewJobEvent != null) NewJobEvent(splits, mapper, className, clientUrl);
         }
 
 
@@ -693,9 +670,5 @@ namespace Padi.Cluster
     }
 
         #endregion
-
-
-
-
 
 }

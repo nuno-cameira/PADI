@@ -88,8 +88,8 @@ namespace Padi.Cluster
             node.JoinEvent += (url) => { pMaster.reportJoinEvent(sender, url); };
             node.DisconectedEvent += (url) => { pMaster.reportDisconectionEvent(sender, url); };
             node.TrackerChangeEvent += (url) => { pMaster.reportTrackerChangeEvent(sender, url); };
-            node.WorkStartEvent += (split, clientUrl) => { pMaster.reportWorkStartEvent(sender, split, clientUrl); };
-            node.WorkEndEvent += (split, clientUrl) => { pMaster.reportWorkEndEvent(sender, split, clientUrl); };
+            node.WorkStartEvent += (peer, split, clientUrl) => { pMaster.reportWorkStartEvent(sender, peer, split, clientUrl); };
+            node.WorkEndEvent += (peer) => { pMaster.reportWorkEndEvent(sender, peer); };
             node.JobDoneEvent += (url) => { pMaster.reportJobDoneEvent(sender, url); };
             node.NewJobEvent += (splits, mapper, classname, clientUrl) => { pMaster.reportNewJobEvent(sender, splits, mapper, classname, clientUrl); };
         }
