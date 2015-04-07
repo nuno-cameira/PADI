@@ -64,7 +64,7 @@
             this.textBox_script.Name = "textBox_script";
             this.textBox_script.Size = new System.Drawing.Size(573, 25);
             this.textBox_script.TabIndex = 0;
-            this.textBox_script.Text = "Script";
+            this.textBox_script.Text = "Script.txt";
             this.textBox_script.TextChanged += new System.EventHandler(this.textBox_script_TextChanged);
             // 
             // button_loadScript
@@ -214,83 +214,92 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(15, 405);
+            this.label3.Location = new System.Drawing.Point(528, 405);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(35, 13);
             this.label3.TabIndex = 14;
             this.label3.Text = "WAIT";
+            this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(56, 405);
+            this.label4.Location = new System.Drawing.Point(128, 405);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(50, 13);
             this.label4.TabIndex = 15;
             this.label4.Text = "STATUS";
+            this.label4.Click += new System.EventHandler(this.label4_Click);
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(112, 405);
+            this.label5.Location = new System.Drawing.Point(184, 405);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(50, 13);
             this.label5.TabIndex = 16;
             this.label5.Text = "SLOWW";
+            this.label5.Click += new System.EventHandler(this.label5_Click);
             // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(168, 405);
+            this.label6.Location = new System.Drawing.Point(240, 405);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(60, 13);
             this.label6.TabIndex = 16;
             this.label6.Text = "FREEZEW";
+            this.label6.Click += new System.EventHandler(this.label6_Click);
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(234, 405);
+            this.label7.Location = new System.Drawing.Point(306, 405);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(76, 13);
             this.label7.TabIndex = 16;
             this.label7.Text = "UNFREEZEW";
+            this.label7.Click += new System.EventHandler(this.label7_Click);
             // 
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(316, 405);
+            this.label8.Location = new System.Drawing.Point(12, 405);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(56, 13);
             this.label8.TabIndex = 16;
             this.label8.Text = "WORKER";
+            this.label8.Click += new System.EventHandler(this.label8_Click);
             // 
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(378, 405);
+            this.label9.Location = new System.Drawing.Point(388, 405);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(56, 13);
             this.label9.TabIndex = 16;
             this.label9.Text = "FREEZEC";
+            this.label9.Click += new System.EventHandler(this.label9_Click);
             // 
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(440, 405);
+            this.label10.Location = new System.Drawing.Point(74, 405);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(48, 13);
             this.label10.TabIndex = 16;
             this.label10.Text = "SUBMIT";
+            this.label10.Click += new System.EventHandler(this.label10_Click);
             // 
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(494, 405);
+            this.label11.Location = new System.Drawing.Point(450, 405);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(72, 13);
             this.label11.TabIndex = 16;
             this.label11.Text = "UNFREEZEC";
+            this.label11.Click += new System.EventHandler(this.label11_Click);
             // 
             // Form1
             // 

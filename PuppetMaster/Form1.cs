@@ -201,6 +201,8 @@ namespace PuppetMaster
         private void button_submit_Click(object sender, EventArgs e)
         {
             pm.executeCommand(textBox_console.Text);
+            textBox_console.Text = "";
+
         }
 
         private void button_openScript_Click(object sender, EventArgs e)
@@ -224,17 +226,49 @@ namespace PuppetMaster
             }
         }
 
+        private void label3_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "WAIT <SECS>";
+        }
 
+        private void label4_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "STATUS";
+        }
 
+        private void label5_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "SLOWW <ID> <SECS>";
+        }
 
+        private void label6_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "FREEZEW <ID>";
+        }
 
+        private void label7_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "UNFREEZEW <ID>";
+        }
 
+        private void label8_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "WORKER <ID> <PUPPETMASTER-URL> <SERVICE-URL> <ENTRY-URL>";
+        }
 
+        private void label9_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "FREEZEC <ID>";
+        }
 
+        private void label11_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "UNFREEZEC <ID>";
+        }
 
-
-
-
-
+        private void label10_Click(object sender, EventArgs e)
+        {
+            textBox_console.Text = "SUBMIT <ENTRY-URL> <FILE> <OUTPUT> <S> <MAP>:";
+        }
     }
 }
