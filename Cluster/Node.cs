@@ -428,7 +428,7 @@ namespace Padi.Cluster
             this.workThr.AssyncInvoke(() =>
             {
                 //inform everyone we're starting to do work on this split
-                clusterAction((node) => { node.onSplitStart(this.url, split, clientUrl); return null; });
+                clusterAction((node) => { node.onSplitStart(this.url, split, clientUrl); return null; }, false);
                 nodeAction((trk) => { trk.onSplitStart(this.url, split, clientUrl); return null; }, this.trkUrl);
 
                 IMapper mapper = Util.loadMapper(code, className);
@@ -753,6 +753,12 @@ namespace Padi.Cluster
 
 
 
+
+
+        public void printStatus()
+        {
+            throw new NotImplementedException();
+        }
     }
 
         #endregion

@@ -273,7 +273,7 @@ namespace PuppetMaster
             if (nodeList.Count > 0)
             {
                 string url = nodeList[0].URL;
-                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
                 //node.status();
             }
             else
@@ -290,7 +290,7 @@ namespace PuppetMaster
             if (nodeList.Count > 0)
             {
                 string url = nodeList[0].URL;
-                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
                 //node.slowW(nodeID, time);
             }
             else
@@ -306,7 +306,7 @@ namespace PuppetMaster
             if (nodeList.Count > 0)
             {
                 string url = nodeList[0].URL;
-                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
                 //node.freezeW(nodeID);
             }
             else
@@ -323,7 +323,7 @@ namespace PuppetMaster
             if (nodeList.Count > 0)
             {
                 string url = nodeList[0].URL;
-                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
                 //node.unFreezeW(nodeID);
             }
             else
@@ -340,7 +340,7 @@ namespace PuppetMaster
             if (nodeList.Count > 0)
             {
                 string url = nodeList[0].URL;
-                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
                 //node.freezeC(nodeID);
             }
             else
@@ -356,7 +356,7 @@ namespace PuppetMaster
             if (nodeList.Count > 0)
             {
                 string url = nodeList[0].URL;
-                INode node = (INode)Activator.GetObject(typeof(INode), url);
+                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
                 //node.unFreezeC(nodeID);
             }
             else

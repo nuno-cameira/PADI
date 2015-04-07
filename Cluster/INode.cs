@@ -3,7 +3,7 @@ using System;
 
 namespace Padi.Cluster
 {
-    public interface INode : IWorker
+    public interface INode : IWorker, ICluster
     {
         //Cluster Properties
         string URL { get; }
@@ -11,16 +11,9 @@ namespace Padi.Cluster
         bool IsBusy { get; }
 
         //Cluster Actions
-        ClusterReport join(string nodeUrl);
-        void disconect(string peer);
         void promote();
         bool doWork(int split, byte[] mapper, string className, string clientUrl);//"Submit" do Tracker
-        void freezeW(int id);
-        void unFreezeW(int id);
-        void freezeC(int id);
-        void unFreezeC(int id);
-        void status();
-        void slowW(int id, int time);
+        void printStatus();
 
         //Cluster Events
         void onTrackerChange(string peer);
