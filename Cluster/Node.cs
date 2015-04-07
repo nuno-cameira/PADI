@@ -530,7 +530,7 @@ namespace Padi.Cluster
 
         public void freezeC(int id)
         {
-            if (this.IsTracker && id == this.ID) 
+            if (this.IsTracker && id == this.ID)
             {
                 Console.WriteLine("freezeC()");
                 haltWork = true;
@@ -594,34 +594,17 @@ namespace Padi.Cluster
 
 
 
-        public void status() 
-        {
-            if (id == this.ID)
-            {
-                Console.WriteLine("status()");
-                // TODO print status stuff here
-            }
-            else
-            {
-                if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.ID == id) { node.status(); } return null; }, false);
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.status(); return null; }, this.trkUrl);
-                }
-            }
-        }
 
 
-        public void slowW(int id, int time) 
+
+
+        public void slowW(int id, int time)
         {
             if (id == this.ID)
             {
                 Console.WriteLine("slowW()");
                 this.haltWork = true;
-                System.Threading.Thread.Sleep(time*1000);
+                System.Threading.Thread.Sleep(time * 1000);
                 this.haltWork = false;
                 halt.Set();
             }
@@ -637,6 +620,54 @@ namespace Padi.Cluster
                 }
             }
         }
+
+
+        public void printStatus()
+        {
+            const string endln = "\n";
+            string status = "";
+
+            //Job myJob=null;
+
+            status += "******************************" + endln;
+            status += "****      NODE STATUS     ****" + endln;
+            status += endln;
+            status += "ID: " + this.ID + endln;
+            status += "URL: " + this.URL + endln;
+            status += "Tracker: " + this.trkUrl + endln;
+            status += "Working: " + this.isBusy + endln;
+
+            if (this.IsBusy)
+            {
+                foreach (Job job in jobs)
+                {
+                    int split = job.getSplit(this.URL);
+                    if (split != -1)
+                    {
+                        status += "   Split: " + split + endln;
+                        status += "   Client: " + job.Client + endln;
+                    }
+                }
+            }
+            status += "******************************" + endln;
+            status += "******************************" + endln;
+
+
+            Console.WriteLine(status);
+        }
+
+        public void status()
+        {
+            if (this.IsTracker)
+            {
+                clusterAction((node) => { node.printStatus(); return null; }, true);
+            }
+            else
+            {
+                nodeAction((trk) => { trk.status(); return null; }, this.trkUrl);
+            }
+        }
+
 
 
         #endregion
@@ -725,7 +756,8 @@ namespace Padi.Cluster
         }
 
 
-        public void onJobDone(string clientUrl) {
+        public void onJobDone(string clientUrl)
+        {
 
             //Send Event
             if (JobDoneEvent != null) JobDoneEvent(clientUrl);
@@ -755,10 +787,7 @@ namespace Padi.Cluster
 
 
 
-        public void printStatus()
-        {
-            throw new NotImplementedException();
-        }
+
     }
 
         #endregion

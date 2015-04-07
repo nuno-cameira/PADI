@@ -83,6 +83,26 @@ namespace Padi.Cluster
         internal string Client { get { return this.clientUrl; } }
 
         internal string ClassName { get { return this.className; } }
+
+
+
+
+        internal int getSplit(string peer)
+        {
+            int res = -1;
+
+            lock (this)
+            {
+                foreach (KeyValuePair<int, string> entry in workAssignment)
+                {
+                    if (entry.Value.Equals(peer))
+                        res = entry.Key;
+                    break;
+                }
+            }
+
+            return res;
+        }
     }
 
 
