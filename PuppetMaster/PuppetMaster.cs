@@ -99,7 +99,7 @@ namespace PuppetMaster
                 case "WAIT":
                     processWait(input);
                     break;
-                case "STATUS:":
+                case "STATUS":
                     processStatus(input);
                     break;
                 case "SLOWW":
@@ -212,6 +212,10 @@ namespace PuppetMaster
                 System.Threading.Thread.Sleep(500);
                 process.Start();
                 NewWorkerEvent(serviceUrl);
+
+                //PLACEHOLDER?? -Vasco
+                nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/Node"));
+
             }
             else
             {
@@ -274,7 +278,7 @@ namespace PuppetMaster
             {
                 string url = nodeList[0].URL;
                 ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                //node.status();
+                node.status();
             }
             else
             {
