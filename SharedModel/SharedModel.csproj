@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Padi.SharedModel</RootNamespace>
-    <AssemblyName>SharedModel</AssemblyName>
+    <AssemblyName>LibPADIMapNoReduce</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
