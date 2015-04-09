@@ -68,10 +68,13 @@ namespace Client
                 return;
             }
 
+            //Keeps the actual number of splits done by the splitFile method (may be less than specified)
+            int actualSplits = 0;
+
             try
             {
                 //Splits the file and creates a 'Splits' dictionary
-                splitFile(inputPath, splits);
+                actualSplits = splitFile(inputPath, splits);
 
             }
             catch (FileNotFoundException)
@@ -80,10 +83,6 @@ namespace Client
                 Console.WriteLine(ABORT_MESSAGE);
                 return;
             }
-
-
-
-
 
 
             Console.WriteLine("Submiting...");
@@ -97,12 +96,12 @@ namespace Client
             this.outputPath = outputPath;
 
             //Submits the job to the known worker node
-            this.localWorker.submit(splits, mapperCode, className, this.url);
-            Console.WriteLine("Submition Ended");
+            this.localWorker.submit(actualSplits, mapperCode, className, this.url);
+            Console.WriteLine("Submit Ended");
 
         }
 
-        private void splitFile(string inputPath, int splits)
+        private int splitFile(string inputPath, int splits)
         {
             byte[] file = null;
 
@@ -143,6 +142,7 @@ namespace Client
 
                     index++;
                 }
+                return index - 1;
             }
         }
 
