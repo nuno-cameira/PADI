@@ -54,11 +54,13 @@ namespace Padi.Cluster
         private readonly TcpChannel channel = null;
         private readonly string url = null;
         private readonly int id;
-        private bool isBusy;
         private bool haltWork = false; //Flag to stop work
-
         private ThrPool workThr = null;
         private List<Job> jobs; //job queue
+
+        //Worker Variables
+        private int splitWork;
+        private string clientWork;
 
         //Cluster status Variables
         private Dictionary<string, INode> cluster = null;
@@ -85,7 +87,7 @@ namespace Padi.Cluster
         public bool IsTracker { get { return this.trkUrl.Equals(this.url); } }
 
         //By busy we mean if it's working on a client split
-        public bool IsBusy { get { return this.isBusy; } }
+        public bool IsBusy { get { return this.splitWork != -1; } }
         #endregion
 
 
@@ -103,7 +105,7 @@ namespace Padi.Cluster
             this.trkUrl = this.url;
             this.cluster = new Dictionary<string, INode>();
             this.tracker = this;
-            this.isBusy = false;
+            this.splitWork = -1;
 
             this.workThr = new ThrPool(THREADPOOL_THREAD_NUMBER, THREADPOOL_BUFFER_SIZE);
             this.id = id;
@@ -423,7 +425,8 @@ namespace Padi.Cluster
         public bool doWork(int split, byte[] code, string className, string clientUrl)
         {
             //Node is now doing work
-            this.isBusy = true;
+            this.splitWork = split;
+            this.clientWork = clientUrl;
 
             this.workThr.AssyncInvoke(() =>
             {
@@ -495,7 +498,7 @@ namespace Padi.Cluster
 
 
                 //Node is available for new work
-                this.isBusy = false;
+                this.splitWork = -1;
 
                 //Report we're done with the task
                 clusterAction((node) => { node.onSplitDone(this.url); return null; });
@@ -635,19 +638,12 @@ namespace Padi.Cluster
             status += "ID: " + this.ID + endln;
             status += "URL: " + this.URL + endln;
             status += "Tracker: " + this.trkUrl + endln;
-            status += "Working: " + this.isBusy + endln;
+            status += "Working: " + this.IsBusy + endln;
 
             if (this.IsBusy)
             {
-                foreach (Job job in jobs)
-                {
-                    int split = job.getSplit(this.URL);
-                    if (split != -1)
-                    {
-                        status += "   Split: " + split + endln;
-                        status += "   Client: " + job.Client + endln;
-                    }
-                }
+                status += "   Split: " + this.splitWork + endln;
+                status += "   Client: " + this.clientWork + endln;
             }
             status += "******************************" + endln;
             status += "******************************" + endln;
