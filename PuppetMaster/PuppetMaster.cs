@@ -295,7 +295,7 @@ namespace PuppetMaster
             {
                 string url = nodeList[0].URL;
                 ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                //node.slowW(nodeID, time);
+                node.slowW(nodeID, time);
             }
             else
             {

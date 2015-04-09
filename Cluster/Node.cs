@@ -606,10 +606,9 @@ namespace Padi.Cluster
             if (id == this.ID)
             {
                 Console.WriteLine("slowW()");
-                this.haltWork = true;
+                freezeW(id);
                 System.Threading.Thread.Sleep(time * 1000);
-                this.haltWork = false;
-                halt.Set();
+                unFreezeW(id);
             }
             else
             {
