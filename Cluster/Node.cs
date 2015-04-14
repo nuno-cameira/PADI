@@ -632,6 +632,7 @@ namespace Padi.Cluster
 
         public void status()
         {
+            Console.WriteLine("status");
             if (this.IsTracker)
             {
                 clusterAction((node) => { node.printStatus(); });

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.VisualBasic;
 
 namespace PuppetMaster
 {
@@ -17,13 +18,17 @@ namespace PuppetMaster
 
         List<NodeData> nodesList = new List<NodeData>();
 
-        PuppetMaster pm = new PuppetMaster();
+        PuppetMaster pm = null;
 
         delegate void FormInvoke();
         public Form1()
         {
             InitializeComponent();
 
+            int port = Int32.Parse(Interaction.InputBox("Set Puppet Master port:", "PuppetMaster", "20001"));
+
+
+            pm = new PuppetMaster(port);
             pm.NewWorkerEvent += onNewWorkerEvent;
 
 

@@ -32,11 +32,8 @@ namespace PuppetMaster
         private List<NodeData> nodeList = new List<NodeData>();
         string url = string.Empty;
 
-        // HARD CODED PUPPET PORT, CHANGE LATER!
-        int puppetPort = 8999;
-
-
-        public PuppetMaster()
+   
+        public PuppetMaster(int puppetPort)
         {
             this.channel = new TcpChannel(puppetPort);
             this.url = "tcp://localhost:" + puppetPort + "/PM";
@@ -201,6 +198,9 @@ namespace PuppetMaster
                 System.Threading.Thread.Sleep(500);
                 process.Start();
                 NewWorkerEvent(serviceUrl);
+
+                //FIXME -Vasco
+                //nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
             }
             else if (input.Length == 5)
             {
@@ -213,7 +213,7 @@ namespace PuppetMaster
                 process.Start();
                 NewWorkerEvent(serviceUrl);
 
-                //PLACEHOLDER?? -Vasco
+                //FIXME -Vasco
                 nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
 
             }
