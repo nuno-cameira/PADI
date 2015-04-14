@@ -41,7 +41,7 @@ namespace PuppetMaster
             this.nodeList = new List<NodeData>();
 
             ChannelServices.RegisterChannel(this.channel, false);
-            RemotingServices.Marshal(this, "PuppetMaster", typeof(PuppetMaster));
+            RemotingServices.Marshal(this, "PM", typeof(PuppetMaster));
         }
 
 
@@ -200,7 +200,7 @@ namespace PuppetMaster
                 NewWorkerEvent(serviceUrl);
 
                 //FIXME -Vasco
-                //nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
+                nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
             }
             else if (input.Length == 5)
             {

@@ -161,7 +161,8 @@ namespace PuppetMaster
             {
                 pm.loadScript(scriptName);
 
-
+                listView1.Clear();
+                step = 0;
                 using (StreamReader reader = File.OpenText(scriptName))
                 {
                     string line;

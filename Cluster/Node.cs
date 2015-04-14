@@ -7,6 +7,7 @@ using Padi.SharedModel;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
+
 using ThreadPool;
 using System.Reflection;
 using System.Threading;
@@ -116,7 +117,7 @@ namespace Padi.Cluster
 
 
             ChannelServices.RegisterChannel(this.channel, ensureSecurity);
-            RemotingServices.Marshal(this, "Node", typeof(Node));
+            RemotingServices.Marshal(this, "W", typeof(Node));
 
             Console.WriteLine("Created node w/ ID: " + id + " @ " + this.URL);
 
@@ -161,7 +162,7 @@ namespace Padi.Cluster
                 report.View = 1;//No use as for now
                 report.Tracker = this.URL;
                 report.Cluster = new List<string>(this.cluster.Keys);
-
+                report.Jobs = jobs;
                 newPeer.setup(report);
 
                 //Tell cluster to add this new node
@@ -188,6 +189,12 @@ namespace Padi.Cluster
             foreach (string s in clus)
             {
                 if (s != this.URL) { onClusterIncrease(s); }
+            }
+
+            List<Job> jbs = new List<Job>(report.Jobs);
+            foreach (Job j in jbs)
+            {
+                this.jobs.Add(j);
             }
         }
 
@@ -265,14 +272,15 @@ namespace Padi.Cluster
             //Checks if proxy exists
             if (node == null)
                 node = (INode)Activator.GetObject(typeof(INode), url);
-
+            
 
             try
             {
                 onSucess(node);
             }
-            catch //remote server does not exist
+            catch (RemotingException)//remote server does not exist
             {
+                
                 //If call failed to tracker then we need a new one
                 if (url == this.trkUrl)
                 {
@@ -309,7 +317,7 @@ namespace Padi.Cluster
                     {
                         onSucess(node);
                     }
-                    catch
+                    catch (RemotingException)//remote server does not exist
                     {
 
                         disconect(entry.Key);

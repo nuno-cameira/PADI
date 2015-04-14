@@ -12,5 +12,6 @@ namespace Padi.Cluster
         public int View;
         public String Tracker;
         public IList<String> Cluster;
+        public IList<Job> Jobs;
     }
 }

@@ -48,5 +48,13 @@ namespace Padi.SharedModel
 
            throw (new System.Exception("could not invoke method"));
        }
+
+       static public void Populate<T>(this T[] arr, T value)
+       {
+           for (int i = 0; i < arr.Length; i++)
+           {
+               arr[i] = value;
+           }
+       }
     }
 }

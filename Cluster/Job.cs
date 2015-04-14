@@ -5,13 +5,13 @@ using System.Text;
 
 namespace Padi.Cluster
 {
-
+    [Serializable]
     public class Job
     {
         private int splits;
         private byte[] mapper;
-        private Dictionary<int, string> workAssignment;
-        private List<int> splitsDone;
+        private string[] workAssignment;
+        private bool[] workDone;
         private string clientUrl;
         private string className;
 
@@ -20,8 +20,11 @@ namespace Padi.Cluster
             this.splits = splits;
             this.mapper = mapper;
             this.clientUrl = clientUrl;
-            this.workAssignment = new Dictionary<int, string>();
-            this.splitsDone = new List<int>();
+            this.workAssignment = new string[splits];
+            Padi.SharedModel.Util.Populate<string>(this.workAssignment, null);
+
+            this.workDone = new bool[splits];
+            Padi.SharedModel.Util.Populate<bool>(this.workDone, false);
             this.className = className;
         }
 
@@ -40,40 +43,37 @@ namespace Padi.Cluster
             int res = -1;
             lock (this)
             {
-                if (workAssignment.Count <= splits)
+                for (int i = 0; i < this.workAssignment.Length; i++)
                 {
-
-                    for (int i = 1; i <= splits; i++)
+                    if (this.workAssignment[i] == null)
                     {
-                        if (!workAssignment.ContainsKey(i))
-                        {
-                            workAssignment.Add(i, node);
-                            res = i;
-                            break;
-                        }
+                        this.workAssignment[i] = node;
+                        res = i;
+                        break;
                     }
                 }
             }
-            return res;
+            return res+1;
         }
 
         internal int assignSplit(string node, int split)
         {
             lock (this)
             {
-                workAssignment.Add(split, node);
+                this.workAssignment[split-1] = node;
             }
             return -1;
         }
 
 
 
-        internal void splitDone(int split) {
-            splitsDone.Add(split);
+        internal void splitDone(int split)
+        {
+            this.workDone[split-1] = true;
         }
         internal bool isSplitDone(int split)
         {
-            return splitsDone.Contains(split);
+            return this.workDone[split-1];
         }
 
         /// <summary>
@@ -82,13 +82,18 @@ namespace Padi.Cluster
         /// <returns>True if there's still splits to assign else otherwise</returns>
         internal bool hasSplits()
         {
-            bool res;
+            bool res = false;
             lock (this)
             {
-                //All splits in workAssignment are being worked on
-                res = workAssignment.Count < splits;
+                for (int i = 0; i < this.workAssignment.Length; i++)
+                {
+                    if (this.workAssignment[i] == null)
+                    {
+                        res = true;
+                        break;
+                    }
+                }
             }
-
             return res;
         }
 
@@ -107,15 +112,17 @@ namespace Padi.Cluster
 
             lock (this)
             {
-                foreach (KeyValuePair<int, string> entry in workAssignment)
+                for (int i = 0; i < this.workAssignment.Length; i++)
                 {
-                    if (entry.Value.Equals(peer))
-                        res = entry.Key;
-                    break;
+                    if (this.workAssignment[i].Equals(peer))
+                    {
+                        res = i;
+                        break;
+                    }
                 }
             }
 
-            return res;
+            return res+1;
         }
     }
 
