@@ -12,6 +12,7 @@ namespace Padi.Cluster
 
         //Cluster Actions
         void promote();
+        void setup(ClusterReport report);
         bool doWork(int split, byte[] mapper, string className, string clientUrl);//"Submit" do Tracker
         void printStatus();
 

@@ -56,7 +56,21 @@ namespace Padi.Cluster
             }
             return res;
         }
-        internal void splitDone(int split) { }
+
+        internal int assignSplit(string node, int split)
+        {
+            lock (this)
+            {
+                workAssignment.Add(split, node);
+            }
+            return -1;
+        }
+
+
+
+        internal void splitDone(int split) {
+            splitsDone.Add(split);
+        }
         internal bool isSplitDone(int split)
         {
             return splitsDone.Contains(split);
