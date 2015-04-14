@@ -102,7 +102,7 @@ namespace Padi.Cluster
             Console.WriteLine("Creating Node...");
 
             this.channel = new TcpChannel(port);
-            this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/Node";
+            this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/W";
             this.trkUrl = this.url;
             this.cluster = new Dictionary<string, INode>();
             this.cluster.Add(this.URL, this);

@@ -39,7 +39,7 @@ namespace PuppetMaster
         public PuppetMaster()
         {
             this.channel = new TcpChannel(puppetPort);
-            this.url = "tcp://localhost:" + puppetPort + "/PuppetMaster";
+            this.url = "tcp://localhost:" + puppetPort + "/PM";
             //this.nodeList = new Dictionary<string, NodeData>();
             this.nodeList = new List<NodeData>();
 
@@ -214,7 +214,7 @@ namespace PuppetMaster
                 NewWorkerEvent(serviceUrl);
 
                 //PLACEHOLDER?? -Vasco
-                nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/Node"));
+                nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
 
             }
             else
