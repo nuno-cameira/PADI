@@ -23,7 +23,7 @@ namespace Padi.Cluster
 
 
 
-            if (args.Length == 2 || args.Length == 4)
+            if (args.Length == 2 )
             {
                 node = new Node(int.Parse(args[0]), int.Parse(args[1]), false);
             }
@@ -33,20 +33,7 @@ namespace Padi.Cluster
             }
 
 
-            string s;
-            for (int i = 0; i < args.Length; i++)
-            {
-                s = args[i];
-
-                if (s.Equals("+l") && i + 1 < args.Length)
-                {
-                    addPuppetListener(node, args[i + 1]);
-                    break;
-
-                }
-            }
-            node.JoinEvent += onJoinEvent;
-            node.DisconectedEvent += onDisconectedEvent;
+      
 
             Console.WriteLine("Server Ready!");
             Console.WriteLine("Type \"kill\" to close the server.");
@@ -77,39 +64,6 @@ namespace Padi.Cluster
 
 
 
-
-        private static void addPuppetListener(Node node, string puppet)
-        {
-            Console.WriteLine("addPuppetListener "+puppet);
-
-            IPuppetMaster pMaster = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), puppet);
-
-            string sender = node.URL;
-            node.JoinEvent += (url) => { pMaster.reportJoinEvent(sender, url); };
-            node.DisconectedEvent += (url) => { pMaster.reportDisconectionEvent(sender, url); };
-            node.TrackerChangeEvent += (url) => { pMaster.reportTrackerChangeEvent(sender, url); };
-            node.WorkStartEvent += (peer, split, clientUrl) => { pMaster.reportWorkStartEvent(sender, peer, split, clientUrl); };
-            node.WorkEndEvent += (peer) => { pMaster.reportWorkEndEvent(sender, peer); };
-            node.JobDoneEvent += (url) => { pMaster.reportJobDoneEvent(sender, url); };
-            node.NewJobEvent += (splits, mapper, classname, clientUrl) => { pMaster.reportNewJobEvent(sender, splits, mapper, classname, clientUrl); };
-        }
-
-
-
-
-        private static void onDisconectedEvent(string url)
-        {
-            Console.WriteLine("onDisconectedEvent: " + url);
-        }
-
-        private static void onMessageEvent(string sender, string msg)
-        {
-            Console.WriteLine("onMessageEvent: " + sender + " " + msg);
-        }
-
-        private static void onJoinEvent(string url)
-        {
-            Console.WriteLine("onJoinEvent: " + url);
-        }
+      
     }
 }

@@ -18,29 +18,6 @@ namespace Padi.Cluster
 {
 
 
-    //Delegate to handle the received messages
-    public delegate void JoinEventHandler(string newNode);
-    //Delegate to handle the received messages
-    public delegate void DisconectedEventHandler(string oldNode);
-
-    //Delegate to handle the received messages
-    public delegate void TrackerChangeEventHandler(string newTracker);
-
-    //Delegate to handle the received messages
-    public delegate void WorkStartEventHandler(string sender, int split, string clientUrl);
-    //Delegate to handle the received messages
-    public delegate void WorkEndEventHandler(string peer);
-
-    //Delegate to handle the received messages
-    public delegate void JobDoneEventHandler(string url);
-    //Delegate to handle the received messages
-    public delegate void NewJobEventHandler(int splits, byte[] mapper, string classname, string clientUrl);
-
-
-
-
-
-
 
     // A delegate to handle the calls to a node in the cluster
     public delegate void ClusterHandler(INode node);
@@ -69,16 +46,7 @@ namespace Padi.Cluster
         private INode tracker = null;
         private string trkUrl = "";
 
-        //Event
-        public event JoinEventHandler JoinEvent;
-        public event DisconectedEventHandler DisconectedEvent;
-        public event TrackerChangeEventHandler TrackerChangeEvent;
-        public event WorkStartEventHandler WorkStartEvent;
-        public event WorkEndEventHandler WorkEndEvent;
-        public event JobDoneEventHandler JobDoneEvent;
-        public event NewJobEventHandler NewJobEvent;
-
-
+      
 
 
         #region "Properties
@@ -692,8 +660,7 @@ namespace Padi.Cluster
             //Check if theres available jobs for him   
             if (this.IsTracker) { nodeAction((node) => { assignTaskTo(node); }, peer); }
 
-            //send event
-            if (JoinEvent != null) { JoinEvent(peer); }
+
         }
 
 
@@ -703,7 +670,7 @@ namespace Padi.Cluster
             //if so retask it
 
             lock (cluster) { cluster.Remove(peer); }
-            if (DisconectedEvent != null) DisconectedEvent(peer);
+         
         }
 
 
@@ -711,7 +678,7 @@ namespace Padi.Cluster
         {
             Console.WriteLine("onTrackerChange");
             if (!this.IsTracker) { this.tracker = (INode)Activator.GetObject(typeof(INode), p); }
-            if (TrackerChangeEvent != null) TrackerChangeEvent(p);
+
         }
 
 
@@ -743,8 +710,7 @@ namespace Padi.Cluster
             }
 
 
-            //Send Event
-            if (WorkEndEvent != null) WorkEndEvent(peer);
+           
 
 
         }
@@ -763,8 +729,7 @@ namespace Padi.Cluster
                     }
                 }
             }
-            //Send Event
-            if (WorkStartEvent != null) WorkStartEvent(peer, split, clientUrl);
+          
         }
 
 
@@ -773,8 +738,7 @@ namespace Padi.Cluster
             Console.WriteLine("onJobDone(" + clientUrl + ")");
 
 
-            //Send Event
-            if (JobDoneEvent != null) JobDoneEvent(clientUrl);
+          
         }
 
         public void onJobReceived(int splits, byte[] mapper, string className, string clientUrl)
@@ -785,8 +749,7 @@ namespace Padi.Cluster
             Job job = new Job(splits, mapper, className, clientUrl);
             jobs.Add(job);
 
-            //Send Event
-            if (NewJobEvent != null) NewJobEvent(splits, mapper, className, clientUrl);
+           
         }
     }
 
