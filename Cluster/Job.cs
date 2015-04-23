@@ -76,6 +76,16 @@ namespace Padi.Cluster
             return this.workDone[split-1];
         }
 
+        internal bool isJobDone()
+        {
+            foreach (bool splitDone in workDone) {
+                if (!splitDone)
+                    return false;
+            }
+            return true;
+        }
+
+
         /// <summary>
         /// Checks if there's still splits to be worked
         /// </summary>
@@ -124,6 +134,9 @@ namespace Padi.Cluster
 
             return res+1;
         }
+
+
+
     }
 
 

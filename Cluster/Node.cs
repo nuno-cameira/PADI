@@ -711,7 +711,7 @@ namespace Padi.Cluster
                 if ((s = j.getSplit(peer)) != -1)
                 {
                     j.splitDone(s);
-                    if (!j.hasSplits())
+                    if (j.isJobDone())
                     {
                         onJobDone(j.Client);
                     }
