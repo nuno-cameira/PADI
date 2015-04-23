@@ -40,12 +40,6 @@
             this.label_loadedScript = new System.Windows.Forms.Label();
             this.button_openScript = new System.Windows.Forms.Button();
             this.listView1 = new System.Windows.Forms.ListView();
-            this.listView2 = new System.Windows.Forms.ListView();
-            this.ID = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.isTracker = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.isWorking = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.splitNumber = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.clientURL = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
@@ -89,10 +83,10 @@
             // 
             // textBox_console
             // 
-            this.textBox_console.Location = new System.Drawing.Point(12, 373);
+            this.textBox_console.Location = new System.Drawing.Point(15, 373);
             this.textBox_console.Multiline = true;
             this.textBox_console.Name = "textBox_console";
-            this.textBox_console.Size = new System.Drawing.Size(651, 25);
+            this.textBox_console.Size = new System.Drawing.Size(648, 25);
             this.textBox_console.TabIndex = 4;
             // 
             // label_script
@@ -168,48 +162,10 @@
             this.listView1.FullRowSelect = true;
             this.listView1.Location = new System.Drawing.Point(15, 100);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(335, 254);
+            this.listView1.Size = new System.Drawing.Size(732, 254);
             this.listView1.TabIndex = 12;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.List;
-            // 
-            // listView2
-            // 
-            this.listView2.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.ID,
-            this.isTracker,
-            this.isWorking,
-            this.splitNumber,
-            this.clientURL});
-            this.listView2.Location = new System.Drawing.Point(356, 69);
-            this.listView2.Name = "listView2";
-            this.listView2.Size = new System.Drawing.Size(391, 285);
-            this.listView2.TabIndex = 13;
-            this.listView2.UseCompatibleStateImageBehavior = false;
-            this.listView2.View = System.Windows.Forms.View.Details;
-            // 
-            // ID
-            // 
-            this.ID.Text = "ID";
-            // 
-            // isTracker
-            // 
-            this.isTracker.Text = "isTracker";
-            // 
-            // isWorking
-            // 
-            this.isWorking.Text = "isWorking";
-            this.isWorking.Width = 76;
-            // 
-            // splitNumber
-            // 
-            this.splitNumber.Text = "splitNumber";
-            this.splitNumber.Width = 98;
-            // 
-            // clientURL
-            // 
-            this.clientURL.Text = "clientURL";
-            this.clientURL.Width = 88;
             // 
             // label3
             // 
@@ -316,7 +272,6 @@
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.listView2);
             this.Controls.Add(this.listView1);
             this.Controls.Add(this.button_openScript);
             this.Controls.Add(this.label_loadedScript);
@@ -350,12 +305,6 @@
         private System.Windows.Forms.Label label_loadedScript;
         private System.Windows.Forms.Button button_openScript;
         private System.Windows.Forms.ListView listView1;
-        private System.Windows.Forms.ListView listView2;
-        private System.Windows.Forms.ColumnHeader ID;
-        private System.Windows.Forms.ColumnHeader isTracker;
-        private System.Windows.Forms.ColumnHeader isWorking;
-        private System.Windows.Forms.ColumnHeader splitNumber;
-        private System.Windows.Forms.ColumnHeader clientURL;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;

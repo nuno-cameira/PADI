@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Threading;
 using System.IO;
 using PADIMapNoReduce;
+using System.Net.Sockets;
 
 namespace Padi.Cluster
 {
@@ -46,7 +47,7 @@ namespace Padi.Cluster
         private INode tracker = null;
         private string trkUrl = "";
 
-      
+
 
 
         #region "Properties
@@ -112,35 +113,7 @@ namespace Padi.Cluster
 
 
         #region "Cluster Actions"
-        /*
-        * Receives a Node's URL and adds it to the cluster.
-        * It also returns information about all nodes on this cluster and the active tracker
-        */
-        public void join(string nodeUrl)
-        {
 
-
-            if (this.IsTracker)
-            {
-                //Creates node's proxy
-                INode newPeer = (INode)Activator.GetObject(typeof(INode), nodeUrl);
-
-                //Prepares cluster's view
-                ClusterReport report = new ClusterReport();
-                report.View = 1;//No use as for now
-                report.Tracker = this.URL;
-                report.Cluster = new List<string>(this.cluster.Keys);
-                report.Jobs = jobs;
-                newPeer.setup(report);
-
-                //Tell cluster to add this new node
-                clusterAction((node) => { node.onClusterIncrease(nodeUrl); });
-            }
-            else
-            {
-                nodeAction((trk) => { trk.join(nodeUrl); }, this.trkUrl);
-            }
-        }
 
 
         public void setup(ClusterReport report)
@@ -227,7 +200,11 @@ namespace Padi.Cluster
          * A safe operation to call remote methods of a specific node.
          * Like the alike 'clusterAction()' it automatically handles disconections.
          */
-        private void nodeAction(ClusterHandler onSucess, string url)
+        private void nodeAction(ClusterHandler onSucess, string url) {
+            nodeAction(onSucess, null, url);
+        }
+
+        private void nodeAction(ClusterHandler onSucess, ClusterHandler onFail, string url)
         {
 
             //Obtain node
@@ -240,15 +217,15 @@ namespace Padi.Cluster
             //Checks if proxy exists
             if (node == null)
                 node = (INode)Activator.GetObject(typeof(INode), url);
-            
+
 
             try
             {
                 onSucess(node);
             }
-            catch (RemotingException)//remote server does not exist
+            catch (SocketException)//remote server does not exist
             {
-                
+
                 //If call failed to tracker then we need a new one
                 if (url == this.trkUrl)
                 {
@@ -285,7 +262,7 @@ namespace Padi.Cluster
                     {
                         onSucess(node);
                     }
-                    catch (RemotingException)//remote server does not exist
+                    catch (SocketException)//remote server does not exist
                     {
 
                         disconect(entry.Key);
@@ -295,39 +272,12 @@ namespace Padi.Cluster
         }
 
 
-        /*
-         * Handles node disconections
-         */
-        public void disconect(string peer)
-        {
-            if (this.IsTracker)
-            {
-                lock (cluster)
-                {
-                    if (cluster.ContainsKey(peer))
-                    {
-                        cluster.Remove(peer);
-                        clusterAction((node) =>
-                        {
-                            node.onClusterDecrease(peer);
-                        });
-                    }
-
-                }
-
-            }
-            else
-            {
-                nodeAction((trk) => { trk.disconect(peer); }, this.trkUrl);
-
-            }
-        }
 
 
         #endregion
 
 
-        #region "Worker"
+        #region "IWorker"
 
         /*
          * 
@@ -449,6 +399,78 @@ namespace Padi.Cluster
             return true;
         }
 
+        #endregion
+
+
+        /*
+         * Region implementing the ICluster methods. These define the methods exposed to the Pupet master
+         * 
+         * All methods follow the same pattern:
+         *  - Reveive message
+         *  - Fowards message if its not tracker
+         *  - Handles message if its tracker
+         */
+        #region "ICluster"
+
+
+
+
+        /*
+        * Adds a Node to the cluster.
+        */
+        public void join(string nodeUrl)
+        {
+
+
+            if (this.IsTracker)
+            {
+                //Creates node's proxy
+                INode newPeer = (INode)Activator.GetObject(typeof(INode), nodeUrl);
+
+                //Prepares cluster's view
+                ClusterReport report = new ClusterReport();
+                report.View = 1;//No use as for now
+                report.Tracker = this.URL;
+                report.Cluster = new List<string>(this.cluster.Keys);
+                report.Jobs = jobs;
+                newPeer.setup(report);
+
+                //Tell cluster to add this new node
+                clusterAction((node) => { node.onClusterIncrease(nodeUrl); });
+            }
+            else
+            {
+                nodeAction((trk) => { trk.join(nodeUrl); }, this.trkUrl);
+            }
+        }
+
+        /*
+        * Handles node disconections
+        */
+        public void disconect(string peer)
+        {
+            if (this.IsTracker)
+            {
+                lock (cluster)
+                {
+                    if (cluster.ContainsKey(peer))
+                    {
+                        cluster.Remove(peer);
+                        clusterAction((node) =>
+                        {
+                            node.onClusterDecrease(peer);
+                        });
+                    }
+
+                }
+
+            }
+            else
+            {
+                nodeAction((trk) => { trk.disconect(peer); }, this.trkUrl);
+
+            }
+        }
 
 
         public void freezeW(int id)
@@ -623,11 +645,7 @@ namespace Padi.Cluster
 
         #endregion
 
-
         #region "Tracker"
-
-
-
 
 
         private bool assignTaskTo(INode node)
@@ -670,7 +688,7 @@ namespace Padi.Cluster
             //if so retask it
 
             lock (cluster) { cluster.Remove(peer); }
-         
+
         }
 
 
@@ -710,7 +728,7 @@ namespace Padi.Cluster
             }
 
 
-           
+
 
 
         }
@@ -729,7 +747,7 @@ namespace Padi.Cluster
                     }
                 }
             }
-          
+
         }
 
 
@@ -738,7 +756,7 @@ namespace Padi.Cluster
             Console.WriteLine("onJobDone(" + clientUrl + ")");
 
 
-          
+
         }
 
         public void onJobReceived(int splits, byte[] mapper, string className, string clientUrl)
@@ -749,7 +767,7 @@ namespace Padi.Cluster
             Job job = new Job(splits, mapper, className, clientUrl);
             jobs.Add(job);
 
-           
+
         }
     }
 
