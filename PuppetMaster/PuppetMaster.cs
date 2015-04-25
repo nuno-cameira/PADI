@@ -11,6 +11,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using System.Windows.Forms;
 using Padi.SharedModel;
+using System.Net.Sockets;
 
 
 namespace PuppetMaster
@@ -31,6 +32,8 @@ namespace PuppetMaster
         //public Dictionary<string, NodeData> nodeList = null;
         private List<NodeData> nodeList = new List<NodeData>();
         string url = string.Empty;
+
+        const string BASEDIR = "../../../";
 
    
         public PuppetMaster(int puppetPort)
@@ -199,8 +202,8 @@ namespace PuppetMaster
                 process.Start();
                 NewWorkerEvent(serviceUrl);
 
-                //FIXME -Vasco
-                nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
+                //nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
+                nodeList.Add(new NodeData(serviceUrl));
             }
             else if (input.Length == 5)
             {
@@ -213,8 +216,8 @@ namespace PuppetMaster
                 process.Start();
                 NewWorkerEvent(serviceUrl);
 
-                //FIXME -Vasco
-                nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
+                //nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
+                nodeList.Add(new NodeData(serviceUrl));
 
             }
             else
@@ -249,11 +252,11 @@ namespace PuppetMaster
                 string url = "tcp://" + Util.LocalIPAddress() + ":" + "10001" + "/Client";
                 IClient c = (IClient)Activator.GetObject(typeof(IClient), url);
 
-                string inputPath = input[2];
-                string outputPath = input[3];
+                string inputPath = BASEDIR + input[2];
+                string outputPath = BASEDIR + input[3];
                 int splits = Convert.ToInt32(input[4]);
                 string className = input[5];
-                string dllPath = input[6];
+                string dllPath = BASEDIR + input[6];
 
                 c.Submit(inputPath, outputPath, splits, className, dllPath);
 
@@ -276,9 +279,19 @@ namespace PuppetMaster
         {
             if (nodeList.Count > 0)
             {
-                string url = nodeList[0].URL;
-                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                node.status();
+                foreach (NodeData nodeData in nodeList)
+                {
+                    string url = nodeData.URL;
+                    ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
+                    try
+                    {
+                        node.status();
+                        break;
+                    }
+                    catch (SocketException) { 
+                        // this node doesnt exist anymore, let's try other one
+                    }
+                }
             }
             else
             {

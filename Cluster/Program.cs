@@ -25,11 +25,11 @@ namespace Padi.Cluster
 
             if (args.Length == 2 )
             {
-                node = new Node(int.Parse(args[0]), int.Parse(args[1]), false);
+                node = new Node(int.Parse(args[0]), args[1], false);
             }
             else
             {
-                node = new Node(int.Parse(args[0]), int.Parse(args[1]), false, args[2]);
+                node = new Node(int.Parse(args[0]), args[1], false, args[2]);
             }
 
 

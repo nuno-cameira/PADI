@@ -64,15 +64,25 @@ namespace Padi.Cluster
 
         #region "Constructors"
 
+
+        private int extractPortFromURL(string url)
+        {
+            int port = Convert.ToInt32(url.Split(':')[2].Split('/')[0]);
+            return port;
+        }
+
+
         /*
         * Constructs a singe node and registers it.
         */
-        public Node(int id, int port, bool ensureSecurity)
+        public Node(int id, string url, bool ensureSecurity)
         {
             Console.WriteLine("Creating Node...");
 
+            int port = extractPortFromURL(url);
             this.channel = new TcpChannel(port);
-            this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/W";
+            //this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/W";
+            this.url = url;
             this.trkUrl = this.url;
             this.cluster = new Dictionary<string, INode>();
             this.cluster.Add(this.URL, this);
@@ -96,7 +106,7 @@ namespace Padi.Cluster
         /*
          * Constructor a node and adds it to the provided cluster.
          */
-        public Node(int id, int port, bool ensureSecurity, string clusterURL)
+        public Node(int id, string port, bool ensureSecurity, string clusterURL)
             : this(id, port, ensureSecurity)
         {
             INode cluster = (INode)Activator.GetObject(typeof(INode), clusterURL);
@@ -145,9 +155,10 @@ namespace Padi.Cluster
          * Computes which node of the cluster will be promoted to cluster. 
          * Once it computes it will call the node to promote it.
          */
-        private void tryPromote()
+        private bool tryPromote()
         {
             string lowestURL = this.URL;
+            bool wasPromoted = false;
             foreach (KeyValuePair<string, INode> entry in cluster)
             {
                 if (entry.Key.GetHashCode() < this.URL.GetHashCode())
@@ -159,9 +170,14 @@ namespace Padi.Cluster
 
             //Chek if node is this or a remote one
             if (lowestURL.Equals(this.URL))
+            {
                 promote();
+                wasPromoted = true;
+            }
             else
                 nodeAction((node) => { node.promote(); }, lowestURL);
+
+            return wasPromoted;
         }
 
         /*
@@ -206,7 +222,6 @@ namespace Padi.Cluster
 
         private void nodeAction(ClusterHandler onSucess, ClusterHandler onFail, string url)
         {
-
             //Obtain node
             INode node = null;
             if (url == this.trkUrl)
@@ -229,7 +244,11 @@ namespace Padi.Cluster
                 //If call failed to tracker then we need a new one
                 if (url == this.trkUrl)
                 {
-                    tryPromote();
+                    bool wasPromoted = tryPromote();
+                    if (wasPromoted) 
+                    {
+                        onSucess(this);
+                    }
                 }
                 else//If call failed to worker then report to tracker
                 {

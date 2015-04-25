@@ -105,7 +105,12 @@ namespace PuppetMaster
 
         private void button_run_Click(object sender, EventArgs e)
         {
-            pm.parser();
+            while (pm.readLine() != null) 
+            {
+                listView1.Items[step].Font = new Font(listView1.Font, FontStyle.Strikeout);
+                step++;
+            }
+            //pm.parser();
             button_run.Enabled = false;
         }
 
