@@ -19,5 +19,6 @@ namespace Padi.Cluster
         void disconect(string peer);
         //public void printStatus();
         void status();
+        //bool assignTaskTo(INode node);
     }
 }
