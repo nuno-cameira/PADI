@@ -45,8 +45,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CircularBuffer.cs" />
+    <Compile Include="CommunicationBehavior.cs" />
     <Compile Include="ClusterReport.cs" />
     <Compile Include="ICluster.cs" />
+    <Compile Include="ICommunicationBehavior.cs" />
     <Compile Include="INode.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="Node.cs" />
