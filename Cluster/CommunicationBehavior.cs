@@ -16,12 +16,16 @@ namespace Padi.Cluster
 {
 
     // A delegate to handle the calls to a node in the cluster
-    //public delegate void ClusterHandler(INode node);
+    public delegate void ClusterHandler(INode node);
 
-    abstract class CommunicationBehavior
+
+    /* 
+    * Generic Communication Behavior of a Node
+    */
+    public abstract class CommunicationBehavior : MarshalByRefObject, ICommunicationBehavior
     {
 
-        //Belonging Node
+        //Belonging Node of this CommunicationBehavior
         protected INode belongingNode = null;
 
         //Configuration constants
@@ -29,11 +33,10 @@ namespace Padi.Cluster
         static private readonly int THREADPOOL_BUFFER_SIZE = 50;
 
         //Node Variables
-        private readonly TcpChannel channel = null;
         public readonly string url = null;
         public readonly int id;
         protected bool haltWork = false; //Flag to stop work
-        protected ThrPool workThr = null;
+        internal ThrPool workThr = null;
         protected List<Job> jobs; //job queue
 
         //Worker Variables
@@ -69,8 +72,6 @@ namespace Padi.Cluster
 
         public CommunicationBehavior(INode node, int id, string url, bool ensureSecurity)
         {
-            Console.WriteLine("Creating CommunicationBehavior...");
-
             this.belongingNode = node;
 
             this.url = url;
@@ -83,9 +84,6 @@ namespace Padi.Cluster
             this.workThr = new ThrPool(THREADPOOL_THREAD_NUMBER, THREADPOOL_BUFFER_SIZE);
             this.id = id;
             this.jobs = new List<Job>();
-
-            Console.WriteLine("Created CommunicationBehavior w/ ID: " + id + " @ " + this.URL);
-
         }
 
 
@@ -118,7 +116,7 @@ namespace Padi.Cluster
         }
 
 
-        protected abstract bool tryPromote();
+        protected abstract bool tryPromote(string deadUrl);
 
 
         public abstract void promote();
@@ -153,19 +151,19 @@ namespace Padi.Cluster
             }
             catch (SocketException)//remote server does not exist
             {
-
                 //If call failed to tracker then we need a new one
                 if (url == this.trkUrl)
                 {
-                    bool wasPromoted = tryPromote();
+                    bool wasPromoted = tryPromote(url);
                     if (wasPromoted)
                     {
+                        disconect(url);
                         onSucess(this.belongingNode);
                     }
                 }
                 else//If call failed to worker then report to tracker
                 {
-                    nodeAction((trk) => { trk.disconect(url); }, this.trkUrl);
+                    nodeAction((trk) => { trk.CommunicationBehavior.disconect(url); }, this.trkUrl);
                 }
             }
         }
@@ -207,7 +205,6 @@ namespace Padi.Cluster
 
 
         #endregion
-
 
 
         #region "IWorker"
@@ -258,7 +255,7 @@ namespace Padi.Cluster
             {
                 if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.ID == id) { node.freezeW(id); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.freezeW(id); } });
                 }
                 else
                 {
@@ -279,7 +276,7 @@ namespace Padi.Cluster
             {
                 if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.ID == id) { node.freezeC(id); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.freezeC(id); } });
                 }
                 else
                 {
@@ -301,7 +298,7 @@ namespace Padi.Cluster
             {
                 if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.ID == id) { node.unFreezeW(id); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.unFreezeW(id); } });
                 }
                 else
                 {
@@ -323,7 +320,7 @@ namespace Padi.Cluster
             {
                 if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.ID == id) { node.unFreezeC(id); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.unFreezeC(id); } });
                 }
                 else
                 {
@@ -347,7 +344,7 @@ namespace Padi.Cluster
             {
                 if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.ID == id) { node.slowW(id, time); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.slowW(id, time); } });
                 }
                 else
                 {
@@ -517,18 +514,16 @@ namespace Padi.Cluster
 
 
 
-
-
-
-
-
+    /* 
+    * Simulates a Frozen Communication Behavior of a Node
+    */
     class FrozenCommunicationBehavior : CommunicationBehavior
     {
 
         public FrozenCommunicationBehavior(INode cluster, int id, string url, bool ensureSecurity) : base(cluster, id, url, ensureSecurity) { }
 
 
-        protected override bool tryPromote()
+        protected override bool tryPromote(string deadUrl)
         {
             throw new SocketException();
         }
@@ -572,7 +567,9 @@ namespace Padi.Cluster
 
 
 
-
+    /* 
+    * Standard Communication Behavior of a Node
+    */
     class NormalCommunicationBehavior : CommunicationBehavior
     {
 
@@ -583,16 +580,16 @@ namespace Padi.Cluster
          * Computes which node of the cluster will be promoted to cluster. 
          * Once it computes it will call the node to promote it.
          */
-        protected override bool tryPromote()
+        protected override bool tryPromote(string deadUrl)
         {
             string lowestURL = this.URL;
             bool wasPromoted = false;
+            cluster.Remove(deadUrl);
             foreach (KeyValuePair<string, INode> entry in cluster)
             {
                 if (entry.Key.GetHashCode() < this.URL.GetHashCode())
                 {
                     lowestURL = entry.Key;
-                    break;
                 }
             }
 
@@ -603,7 +600,9 @@ namespace Padi.Cluster
                 wasPromoted = true;
             }
             else
-                nodeAction((node) => { node.promote(); }, lowestURL);
+            {
+                nodeAction((node) => { node.CommunicationBehavior.promote(); }, lowestURL);
+            }
 
             return wasPromoted;
         }
@@ -614,7 +613,6 @@ namespace Padi.Cluster
          */
         public override void promote()
         {
-            Console.WriteLine("promote");
             //This operation will change several variables
             lock (this)
             {
@@ -635,7 +633,7 @@ namespace Padi.Cluster
                     //Updates cluster information about current tracker
                     this.tracker = belongingNode;
                     this.trkUrl = this.url;
-                    clusterAction((node) => { node.onTrackerChange(this.URL); });
+                    clusterAction((node) => { node.CommunicationBehavior.onTrackerChange(this.URL); });
                 }
             }
         }
@@ -651,13 +649,13 @@ namespace Padi.Cluster
                 clusterAction((node) =>
                 {
                     //Tracker wont work if there's Workers in the cluster
-                    if (node.URL == this.URL)
+                    if (node.CommunicationBehavior.URL == this.URL)
                     {
                         return;
                     }
 
                     //Inform nodes about new job
-                    node.onJobReceived(splits, mapper, classname, clientUrl);
+                    node.CommunicationBehavior.onJobReceived(splits, mapper, classname, clientUrl);
 
                     //Assign split to node if possible
                     assignTaskTo(node);
@@ -665,7 +663,7 @@ namespace Padi.Cluster
             }
             else
             {
-                nodeAction((trk) => { trk.submit(splits, mapper, classname, clientUrl); }, this.trkUrl);
+                nodeAction((trk) => { trk.CommunicationBehavior.submit(splits, mapper, classname, clientUrl); }, this.trkUrl);
                 return;
             }
         }
@@ -680,7 +678,7 @@ namespace Padi.Cluster
             this.workThr.AssyncInvoke(() =>
             {
                 //inform everyone we're starting to do work on this split
-                clusterAction((node) => { node.onSplitStart(this.url, split, clientUrl); });
+                clusterAction((node) => { node.CommunicationBehavior.onSplitStart(this.url, split, clientUrl); });
 
                 IMapper mapper = Util.loadMapper(code, className);
 
@@ -749,7 +747,7 @@ namespace Padi.Cluster
                 this.splitWork = -1;
 
                 //Report we're done with the task
-                clusterAction((node) => { node.onSplitDone(this.url); });
+                clusterAction((node) => { node.CommunicationBehavior.onSplitDone(this.url); });
 
             });
             return true;
@@ -772,14 +770,14 @@ namespace Padi.Cluster
                 report.Tracker = this.URL;
                 report.Cluster = new List<string>(this.cluster.Keys);
                 report.Jobs = jobs;
-                newPeer.setup(report);
+                newPeer.CommunicationBehavior.setup(report);
 
                 //Tell cluster to add this new node
-                clusterAction((node) => { node.onClusterIncrease(nodeUrl); });
+                clusterAction((node) => { node.CommunicationBehavior.onClusterIncrease(nodeUrl); });
             }
             else
             {
-                nodeAction((trk) => { trk.join(nodeUrl); }, this.trkUrl);
+                nodeAction((trk) => { trk.CommunicationBehavior.join(nodeUrl); }, this.trkUrl);
             }
         }
 
@@ -794,30 +792,27 @@ namespace Padi.Cluster
                         cluster.Remove(peer);
                         clusterAction((node) =>
                         {
-                            node.onClusterDecrease(peer);
+                            node.CommunicationBehavior.onClusterDecrease(peer);
                         });
                     }
                 }
             }
             else
             {
-                nodeAction((trk) => { trk.disconect(peer); }, this.trkUrl);
+                nodeAction((trk) => { trk.CommunicationBehavior.disconect(peer); }, this.trkUrl);
             }
         }
 
 
         public override void status()
         {
-            Console.WriteLine("status");
             if (this.IsTracker)
             {
-                Console.WriteLine("status IF");
-                clusterAction((node) => { node.printStatus(); });
+                clusterAction((node) => { node.CommunicationBehavior.printStatus(); });
             }
             else
             {
-                Console.WriteLine("status ELSE");
-                nodeAction((trk) => { trk.status(); }, this.trkUrl);
+                nodeAction((trk) => { trk.CommunicationBehavior.status(); }, this.trkUrl);
             }
         }
 
@@ -826,9 +821,9 @@ namespace Padi.Cluster
             foreach (Job job in this.jobs)
             {
 
-                if (job.hasSplits() && !node.IsBusy)
+                if (job.hasSplits() && !node.CommunicationBehavior.IsBusy)
                 {
-                    node.doWork(job.assignSplit(node.URL), job.Mapper, job.ClassName, job.Client);
+                    node.CommunicationBehavior.doWork(job.assignSplit(node.CommunicationBehavior.URL), job.Mapper, job.ClassName, job.Client);
                     return true;
                 }
             }

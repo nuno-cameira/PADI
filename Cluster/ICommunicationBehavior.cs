@@ -1,24 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Padi.SharedModel;
+using System;
 
 namespace Padi.Cluster
 {
-    public interface ICommunicationBehavior
+    public interface ICommunicationBehavior : IWorker, ICluster
     {
-        bool tryPromote();
+
+        //Cluster Properties
+        string URL { get; }
+        int ID { get; }
+        bool IsBusy { get; }
+
+        //Cluster Actions
         void promote();
-        //private void nodeAction(ClusterHandler onSucess, string url);
-        //private void nodeAction(ClusterHandler onSucess, ClusterHandler onFail, string url);
-        //private void clusterAction(ClusterHandler onSucess);
-        void submit(int splits, byte[] mapper, string classname, string clientUrl);
-        bool doWork(int split, byte[] code, string className, string clientUrl);
-        void join(string nodeUrl);
-        void disconect(string peer);
-        //public void printStatus();
-        void status();
-        //bool assignTaskTo(INode node);
+        void setup(ClusterReport report);
+        bool doWork(int split, byte[] mapper, string className, string clientUrl);//"Submit" do Tracker
+        void printStatus();
+
+        //Cluster Events
+        void onTrackerChange(string peer);
+        void onClusterDecrease(string peer);
+        void onClusterIncrease(string peer);
+
+        //Worker Events
+        void onSplitDone(string peer);
+        void onSplitStart(string peer, int split, string clientUrl);
+
+        //Tracker events
+        void onJobDone(string clientUrl);
+        void onJobReceived(int splits, byte[] mapper, string classname, string clientUrl);
+
+
     }
 }

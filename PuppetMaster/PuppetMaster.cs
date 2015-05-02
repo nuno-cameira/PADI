@@ -297,6 +297,7 @@ namespace PuppetMaster
             {
                 foreach (NodeData nodeData in nodeList)
                 {
+                    //MessageBox.Show(nodeData.URL);
                     string url = nodeData.URL;
                     ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
                     try
@@ -306,6 +307,7 @@ namespace PuppetMaster
                     }
                     catch (SocketException) { 
                         // this node doesnt exist anymore, let's try other one
+                        // TODO remove the node when it's removed from the cluster
                     }
                 }
             }
