@@ -12,14 +12,14 @@ namespace Client
         {
             Client client = null;
 
-            if (args.Length != 1)
+            if (args.Length != 2)
             {
                 Console.WriteLine("Error: Missing arguments");
                 return;
             }
             else
             {
-                client = new Client(args[0]);
+                client = new Client(args[0], Convert.ToInt32(args[1]));
             }
 
             Console.WriteLine("Client Ready!");

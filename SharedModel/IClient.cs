@@ -31,6 +31,11 @@ namespace Padi.SharedModel
        /// <returns></returns>
         byte[] returnSplit(int splitNumber);
 
+        /// <summary>
+        /// Checks if the client is currently working on a job 
+        /// </summary>
+        bool hasJob();
+
     }
 }
 

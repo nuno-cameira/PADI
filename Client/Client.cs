@@ -19,11 +19,12 @@ namespace Client
         private IWorker localWorker = null;
 
         private readonly TcpChannel channel = null;
-        private readonly int clientPort = 10001;
         private readonly string url = null;
 
         private string inputPath = null;
         private string outputPath = null;
+
+        private bool job = false;
 
         public struct SplitInfo
         {
@@ -40,23 +41,27 @@ namespace Client
 
 
 
-        public Client(string EntryURL)
+        public Client(string EntryURL, int Port)
         {
             Console.WriteLine("Creating the Client...");
 
-            this.channel = new TcpChannel(clientPort);
-            this.url = "tcp://" + Util.LocalIPAddress() + ":" + clientPort + "/Client";
+            this.channel = new TcpChannel(Port);
+            this.url = "tcp://" + Util.LocalIPAddress() + ":" + Port + "/C";
 
             ChannelServices.RegisterChannel(this.channel, false);
-            RemotingServices.Marshal(this, "Client", typeof(Client));
+            RemotingServices.Marshal(this, "C", typeof(Client));
 
 
             this.localWorker = (IWorker)Activator.GetObject(typeof(IWorker), EntryURL);
+
+            Console.WriteLine("Created Client w/ ID: " + this.url);
         }
 
 
         public void Submit(string inputPath, string outputPath, int splits, string className, string dllPath)
         {
+            this.job = true;
+
             Console.WriteLine("Sumbit( " + inputPath + ",  " + outputPath + ",  " + splits + ",  " + className + ",  " + dllPath + ")");
 
             if (!Directory.Exists(outputPath))
@@ -183,7 +188,14 @@ namespace Client
         public void onJobDone()
         {
             splitsDictionary.Clear();
+            this.job = false;
             Console.WriteLine("Job Done");
+        }
+
+        //Checks if the client is currently working on a job
+        public bool hasJob()
+        {
+            return this.job;
         }
 
     }

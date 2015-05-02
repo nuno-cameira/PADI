@@ -494,6 +494,9 @@ namespace Padi.Cluster
         public void onJobDone(string clientUrl)
         {
             Console.WriteLine("onJobDone(" + clientUrl + ")");
+
+            IClient client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
+            client.onJobDone();
         }
 
 

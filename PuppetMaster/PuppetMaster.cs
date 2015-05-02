@@ -33,6 +33,8 @@ namespace PuppetMaster
         private List<NodeData> nodeList = new List<NodeData>();
         string url = string.Empty;
 
+        private int clientPort = 10001;
+
         const string BASEDIR = "../../../";
 
    
@@ -241,30 +243,44 @@ namespace PuppetMaster
 
         private void processSubmit(string[] input)
         {
-
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = "Client.exe";
-            startInfo.Arguments = input[1];
-            Process p = Process.Start(startInfo);
-            try
+            while (clientPort < 19999)
             {
-                // TODO HARDCODED PORT, CHANGE LATER!
-                string url = "tcp://" + Util.LocalIPAddress() + ":" + "10001" + "/Client";
-                IClient c = (IClient)Activator.GetObject(typeof(IClient), url);
+                try
+                {
+                    string url = "tcp://" + Util.LocalIPAddress() + ":" + this.clientPort + "/C";
+                    IClient c = (IClient)Activator.GetObject(typeof(IClient), url);
 
-                string inputPath = BASEDIR + input[2];
-                string outputPath = BASEDIR + input[3];
-                int splits = Convert.ToInt32(input[4]);
-                string className = input[5];
-                string dllPath = BASEDIR + input[6];
+                    if (!c.hasJob())
+                    {
+                        string inputPath = BASEDIR + input[2];
+                        string outputPath = BASEDIR + input[3];
+                        int splits = Convert.ToInt32(input[4]);
+                        string className = input[5];
+                        string dllPath = BASEDIR + input[6];
 
-                c.Submit(inputPath, outputPath, splits, className, dllPath);
+                        c.Submit(inputPath, outputPath, splits, className, dllPath);
 
-                //IClient c = (IClient)p.CreateObjRef(typeof(IClient));
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("ERROR: " + e.ToString());
+                        this.clientPort = 10001;
+                        break;
+                    }
+                    else
+                    {
+                        this.clientPort++;
+                    }
+
+                }
+                catch (SocketException)
+                {
+                    ProcessStartInfo startInfo = new ProcessStartInfo();
+                    startInfo.FileName = "Client.exe";
+                    startInfo.Arguments = input[1] + " " + this.clientPort;
+                    Process p = Process.Start(startInfo);
+
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("ERROR: " + e.ToString());
+                }
             }
         }
 
