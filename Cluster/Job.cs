@@ -126,11 +126,20 @@ namespace Padi.Cluster
                 {
                     if (this.workAssignment[i].Equals(peer))
                     {
-                        res = i;
-                        break;
+                        
+                        if (!isSplitDone(i+1))
+                        {
+                            Console.WriteLine("Peer is working on split :" + i);
+                            res = i;
+                            break;
+                        }
+                        else {
+                            Console.WriteLine("Peer worked and finished split :" + i);
+                        }
                     }
                 }
             }
+
 
             return res+1;
         }
