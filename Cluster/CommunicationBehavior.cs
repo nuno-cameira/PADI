@@ -26,7 +26,7 @@ namespace Padi.Cluster
     {
 
         //Belonging Node of this CommunicationBehavior
-        protected INode belongingNode = null;
+        public INode belongingNode = null;
 
         //Configuration constants
         static private readonly int THREADPOOL_THREAD_NUMBER = 10;
@@ -70,6 +70,24 @@ namespace Padi.Cluster
             return port;
         }
 
+        // Constructor only for copying fields from other CommunicationBehavior class
+        public CommunicationBehavior(CommunicationBehavior oldBehavior) 
+        {
+            this.belongingNode = oldBehavior.belongingNode;
+
+            this.url = oldBehavior.url;
+            this.trkUrl = oldBehavior.trkUrl;
+            //this.cluster = new Dictionary<string, INode>();
+            this.cluster = oldBehavior.cluster;
+            this.tracker = oldBehavior.tracker;
+            this.splitWork = oldBehavior.splitWork;
+
+            this.workThr = oldBehavior.workThr;
+            this.id = oldBehavior.id;
+            //this.jobs = new List<Job>();
+            this.jobs = oldBehavior.jobs;
+        }
+
         public CommunicationBehavior(INode node, int id, string url, bool ensureSecurity)
         {
             this.belongingNode = node;
@@ -85,6 +103,7 @@ namespace Padi.Cluster
             this.id = id;
             this.jobs = new List<Job>();
         }
+
 
 
         #endregion
@@ -520,6 +539,8 @@ namespace Padi.Cluster
     class FrozenCommunicationBehavior : CommunicationBehavior
     {
 
+        public FrozenCommunicationBehavior(CommunicationBehavior oldCommunicationBehavior) : base(oldCommunicationBehavior) { }
+
         public FrozenCommunicationBehavior(INode cluster, int id, string url, bool ensureSecurity) : base(cluster, id, url, ensureSecurity) { }
 
 
@@ -572,6 +593,8 @@ namespace Padi.Cluster
     */
     class NormalCommunicationBehavior : CommunicationBehavior
     {
+
+        public NormalCommunicationBehavior(CommunicationBehavior oldCommunicationBehavior) : base(oldCommunicationBehavior) { }
 
         public NormalCommunicationBehavior(INode cluster, int id, string url, bool ensureSecurity) : base(cluster, id, url, ensureSecurity) { }
 

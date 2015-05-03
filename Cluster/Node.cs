@@ -32,7 +32,7 @@ namespace Padi.Cluster
         private readonly string url = null;
         private readonly int id;
 
-        CommunicationBehavior communicationBehavior = null;
+        public CommunicationBehavior communicationBehavior = null;
 
 
 
@@ -99,6 +99,13 @@ namespace Padi.Cluster
 
         #endregion
 
+
+        public void switchCommunicationBehavior(CommunicationBehavior oldBehavior, CommunicationBehavior newBehavior)
+        {
+
+        this.communicationBehavior = new FrozenCommunicationBehavior(this.communicationBehavior);
+
+        }
 
 
         #region "IWorker"
