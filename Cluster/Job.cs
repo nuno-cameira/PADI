@@ -129,12 +129,12 @@ namespace Padi.Cluster
                         
                         if (!isSplitDone(i+1))
                         {
-                            Console.WriteLine("Peer is working on split :" + i);
+                            Console.WriteLine("Peer is working on split :" + (i + 1));
                             res = i;
                             break;
                         }
                         else {
-                            Console.WriteLine("Peer worked and finished split :" + i);
+                            Console.WriteLine("Peer worked and finished split :" + (i + 1));
                         }
                     }
                 }

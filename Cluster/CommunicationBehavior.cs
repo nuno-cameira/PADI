@@ -707,17 +707,15 @@ namespace Padi.Cluster
 
                 //Contact client and request content
                 IClient client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
-                byte[] splitCByte = client.returnSplit(split);
 
-                string splitContent = System.Text.Encoding.UTF8.GetString(splitCByte);
+                byte[] splitCByte = client.returnSplit(split);
 
                 Dictionary<string, string> groupedKeys = new Dictionary<string, string>();
 
-
-
                 //Map each line
-                using (StringReader reader = new StringReader(splitContent))
+                using (var reader = new StreamReader(new MemoryStream(splitCByte), Encoding.ASCII))
                 {
+                    int j = 0;
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
@@ -731,13 +729,16 @@ namespace Padi.Cluster
                             Console.WriteLine("Resuming...");
                         }
 
-
-                        object[] args = new object[] { line };
+                        /* DEBUG SHIT
+                        Console.WriteLine("Mapping line " + j);
+                        j++;
+                         * */
 
                         IList<KeyValuePair<string, string>> result = mapper.Map(line);
 
+
                         foreach (KeyValuePair<string, string> p in result)
-                        {
+                        {                            
                             if (groupedKeys.ContainsKey(p.Key))
                             {
                                 groupedKeys[p.Key] += " " + p.Value;
@@ -745,22 +746,12 @@ namespace Padi.Cluster
                             else
                             {
                                 groupedKeys[p.Key] = p.Value;
-                            }
+                            }                           
                         }
                     }
                 }
 
-                var array = groupedKeys.Keys.ToArray();
-
-                Array.Sort(array);
-
-                string returnString = null;
-
-                // Loop through keys.
-                foreach (var key in array)
-                {
-                    returnString += key + ": [" + groupedKeys[key] + "]\n";
-                }
+                string returnString = string.Join("\n", groupedKeys.Select(x => x.Key + ": [" + x.Value + "]"));
 
                 //Return the result to the client
                 client.onSplitDone(returnString, split);
