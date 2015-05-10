@@ -118,13 +118,13 @@ namespace Padi.Cluster
 
         internal int getSplit(string peer)
         {
-            int res = -1;
+            int res = -2;
 
             lock (this)
             {
                 for (int i = 0; i < this.workAssignment.Length; i++)
                 {
-                    if (this.workAssignment[i].Equals(peer))
+                    if (this.workAssignment[i] != null && this.workAssignment[i].Equals(peer))
                     {
                         
                         if (!isSplitDone(i+1))
