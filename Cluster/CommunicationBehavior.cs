@@ -712,8 +712,10 @@ namespace Padi.Cluster
 
                 byte[] splitCByte = client.returnSplit(split);
 
-                Dictionary<string, string> groupedKeys = new Dictionary<string, string>();
+                client = null;
 
+                Dictionary<string, string> groupedKeys = new Dictionary<string, string>();
+                IList<KeyValuePair<string, string>> result;
                 //Map each line
                 using (var reader = new StreamReader(new MemoryStream(splitCByte), Encoding.ASCII))
                 {
@@ -730,13 +732,13 @@ namespace Padi.Cluster
                             halt.Reset();
                             Console.WriteLine("Resuming...");
                         }
-
-                        /* DEBUG SHIT
+                        /*
+                        //DEBUG SHIT
                         Console.WriteLine("Mapping line " + j);
                         j++;
-                         * */
+                         */
 
-                        IList<KeyValuePair<string, string>> result = mapper.Map(line);
+                        result = mapper.Map(line);
 
 
                         foreach (KeyValuePair<string, string> p in result)
@@ -756,6 +758,7 @@ namespace Padi.Cluster
                 string returnString = string.Join("\n", groupedKeys.Select(x => x.Key + ": [" + x.Value + "]"));
 
                 //Return the result to the client
+                client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
                 client.onSplitDone(returnString, split);
 
 

@@ -252,8 +252,8 @@ namespace PuppetMaster
 
                     if (!c.hasJob())
                     {
-                        string inputPath = BASEDIR + input[2];
-                        string outputPath = BASEDIR + input[3];
+                        string inputPath = input[2];
+                        string outputPath = input[3];
                         int splits = Convert.ToInt32(input[4]);
                         string className = input[5];
                         string dllPath = BASEDIR + input[6];
