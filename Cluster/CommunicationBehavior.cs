@@ -38,6 +38,7 @@ namespace Padi.Cluster
         protected bool haltWork = false; //Flag to stop work
         internal ThrPool workThr = null;
         protected List<Job> jobs; //job queue
+        protected List<ClusterHandler> freezer = new List<ClusterHandler>();
 
         //Worker Variables
         public int splitWork;
@@ -71,7 +72,7 @@ namespace Padi.Cluster
         }
 
         // Constructor only for copying fields from other CommunicationBehavior class
-        public CommunicationBehavior(CommunicationBehavior oldBehavior) 
+        public CommunicationBehavior(CommunicationBehavior oldBehavior)
         {
             this.belongingNode = oldBehavior.belongingNode;
 
@@ -145,12 +146,8 @@ namespace Padi.Cluster
          * A safe operation to call remote methods of a specific node.
          * Like the alike 'clusterAction()' it automatically handles disconections.
          */
-        protected void nodeAction(ClusterHandler onSucess, string url)
-        {
-            nodeAction(onSucess, null, url);
-        }
 
-        protected void nodeAction(ClusterHandler onSucess, ClusterHandler onFail, string url)
+        protected bool nodeAction(ClusterHandler onSucess, string url)
         {
             //Obtain node
             INode node = null;
@@ -167,12 +164,17 @@ namespace Padi.Cluster
             try
             {
                 onSucess(node);
+                return true;
             }
             catch (SocketException)//remote server does not exist
             {
+
+
                 //If call failed to tracker then we need a new one
                 if (url == this.trkUrl)
                 {
+                    freezer.Add(onSucess);
+
                     bool wasPromoted = tryPromote(url);
                     if (wasPromoted)
                     {
@@ -184,6 +186,8 @@ namespace Padi.Cluster
                 {
                     nodeAction((trk) => { trk.CommunicationBehavior.disconect(url); }, this.trkUrl);
                 }
+
+                return false;
             }
         }
 
@@ -196,26 +200,11 @@ namespace Padi.Cluster
          */
         protected void clusterAction(ClusterHandler onSucess)
         {
-            List<string> disconected = new List<string>();
-
-
             foreach (KeyValuePair<string, INode> entry in cluster)
             {
-                INode node = entry.Value;
-                if (node == null)
-                    node = (INode)Activator.GetObject(typeof(INode), entry.Key);
-
                 this.workThr.AssyncInvoke(() =>
                 {
-                    try
-                    {
-                        onSucess(node);
-                    }
-                    catch (SocketException)//remote server does not exist
-                    {
-
-                        disconect(entry.Key);
-                    }
+                    nodeAction(onSucess, entry.Key);
                 });
             }
         }
@@ -456,10 +445,27 @@ namespace Padi.Cluster
         }
 
 
-        public void onTrackerChange(string p)
+        public void onTrackerChange(string tracker)
         {
-            Console.WriteLine("onTrackerChange");
-            if (!this.IsTracker) { this.tracker = (INode)Activator.GetObject(typeof(INode), p); }
+            Console.WriteLine("onTrackerChange()");
+            if (!this.IsTracker)
+            {
+                this.tracker = (INode)Activator.GetObject(typeof(INode), tracker);
+            }
+
+            List<ClusterHandler> unfreeze = new List<ClusterHandler>();
+            foreach (ClusterHandler action in freezer)
+            {
+                if (nodeAction(action, tracker))
+                    unfreeze.Add(action);
+            }
+
+            foreach (ClusterHandler doneAction in unfreeze)
+            {
+
+                freezer.Remove(doneAction);
+            }
+
         }
 
 
@@ -659,6 +665,9 @@ namespace Padi.Cluster
                     this.tracker = belongingNode;
                     this.trkUrl = this.url;
                     clusterAction((node) => { node.CommunicationBehavior.onTrackerChange(this.URL); });
+
+                    foreach (ClusterHandler action in freezer)
+                        action(this.belongingNode);
                 }
             }
         }
@@ -742,7 +751,7 @@ namespace Padi.Cluster
 
 
                         foreach (KeyValuePair<string, string> p in result)
-                        {                            
+                        {
                             if (groupedKeys.ContainsKey(p.Key))
                             {
                                 groupedKeys[p.Key] += " " + p.Value;
@@ -750,7 +759,7 @@ namespace Padi.Cluster
                             else
                             {
                                 groupedKeys[p.Key] = p.Value;
-                            }                           
+                            }
                         }
                     }
                 }
