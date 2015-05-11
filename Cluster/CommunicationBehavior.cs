@@ -787,7 +787,10 @@ namespace Padi.Cluster
                 ClusterReport report = new ClusterReport();
                 report.View = 1;//No use as for now
                 report.Tracker = this.URL;
-                report.Cluster = new List<string>(this.cluster.Keys);
+                lock (this.cluster)
+                {
+                    report.Cluster = new List<string>(this.cluster.Keys);
+                }
                 report.Jobs = jobs;
                 newPeer.CommunicationBehavior.setup(report);
 
