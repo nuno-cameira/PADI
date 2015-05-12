@@ -342,7 +342,7 @@ namespace PuppetMaster
             {
                 string url = nodeList[0].URL;
                 ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                //node.freezeW(nodeID);
+                node.freezeW(nodeID);
             }
             else
             {
@@ -359,7 +359,7 @@ namespace PuppetMaster
             {
                 string url = nodeList[0].URL;
                 ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                //node.unFreezeW(nodeID);
+                node.unFreezeW(nodeID);
             }
             else
             {
@@ -376,7 +376,7 @@ namespace PuppetMaster
             {
                 string url = nodeList[0].URL;
                 ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                //node.freezeC(nodeID);
+                node.freezeC(nodeID);
             }
             else
             {
@@ -392,7 +392,7 @@ namespace PuppetMaster
             {
                 string url = nodeList[0].URL;
                 ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                //node.unFreezeC(nodeID);
+                node.unFreezeC(nodeID);
             }
             else
             {

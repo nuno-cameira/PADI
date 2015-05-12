@@ -554,41 +554,49 @@ namespace Padi.Cluster
 
         protected override bool tryPromote(string deadUrl)
         {
+            Console.WriteLine("FrozenCommunicationBehavior::tryPromote");
             throw new SocketException();
         }
 
         public override void promote()
         {
+            Console.WriteLine("FrozenCommunicationBehavior::promote");
             throw new SocketException();
         }
 
         public override void submit(int splits, byte[] mapper, string classname, string clientUrl)
         {
+            Console.WriteLine("FrozenCommunicationBehavior::submit");
             throw new SocketException();
         }
 
         public override bool doWork(int split, byte[] code, string className, string clientUrl)
         {
+            Console.WriteLine("FrozenCommunicationBehavior::doWork");
             throw new SocketException();
         }
 
         public override void join(string nodeUrl)
         {
+            Console.WriteLine("FrozenCommunicationBehavior::join");
             throw new SocketException();
         }
 
         public override void disconect(string peer)
         {
+            Console.WriteLine("FrozenCommunicationBehavior::disconect");
             throw new SocketException();
         }
 
         public override void status()
         {
+            Console.WriteLine("FrozenCommunicationBehavior::status");
             throw new SocketException();
         }
 
         protected override bool assignTaskTo(INode node)
         {
+            Console.WriteLine("FrozenCommunicationBehavior::assignTaskTo");
             throw new SocketException();
         }
 
@@ -613,6 +621,7 @@ namespace Padi.Cluster
          */
         protected override bool tryPromote(string deadUrl)
         {
+            Console.WriteLine("NormalCommunicationBehavior::tryPromote");
             string lowestURL = this.URL;
             bool wasPromoted = false;
             cluster.Remove(deadUrl);
@@ -814,6 +823,7 @@ namespace Padi.Cluster
 
         public override void disconect(string peer)
         {
+            Console.WriteLine("disconect::"+peer);
             if (this.IsTracker)
             {
                 lock (cluster)
@@ -827,6 +837,18 @@ namespace Padi.Cluster
                         });
                     }
                 }
+
+                lock (jobs) {
+                    int split=-1;
+                    foreach (Job j in jobs) {
+                        if ((split = j.getSplit(peer)) != -1) {
+                            Console.WriteLine("Canceling assigned job " + split);
+
+                            j.cancel(split);
+                            break;
+                        }
+                    }
+                }
             }
             else
             {
@@ -837,6 +859,7 @@ namespace Padi.Cluster
 
         public override void status()
         {
+
             if (this.IsTracker)
             {
                 clusterAction((node) => { node.CommunicationBehavior.printStatus(); });

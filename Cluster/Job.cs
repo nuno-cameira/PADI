@@ -64,7 +64,9 @@ namespace Padi.Cluster
             }
             return -1;
         }
-
+        internal void cancel(int split) {
+            this.workAssignment[split-1] = null;
+        }
 
 
         internal void splitDone(int split)
