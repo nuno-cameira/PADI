@@ -838,21 +838,25 @@ namespace Padi.Cluster
                     }
                 }
 
-                lock (jobs) {
-                    int split=-1;
-                    foreach (Job j in jobs) {
-                        if ((split = j.getSplit(peer)) != -1) {
-                            Console.WriteLine("Canceling assigned job " + split);
-
-                            j.cancel(split);
-                            break;
-                        }
-                    }
-                }
             }
             else
             {
                 nodeAction((trk) => { trk.CommunicationBehavior.disconect(peer); }, this.trkUrl);
+            }
+
+            lock (jobs)
+            {
+                int split = -1;
+                foreach (Job j in jobs)
+                {
+                    if ((split = j.getSplit(peer)) != -1)
+                    {
+                        Console.WriteLine("Canceling assigned job " + split);
+
+                        j.cancel(split);
+                        break;
+                    }
+                }
             }
         }
 
