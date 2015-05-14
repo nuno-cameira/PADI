@@ -125,68 +125,6 @@ namespace PuppetMaster
         }
 
 
-        // TODO base code, erase when not needed
-        public void parser2()
-        {
-            //If we want to do this listing all files in the root project directory
-            /*string fullpath = Directory.GetCurrentDirectory();
-            string path = Path.GetDirectoryName(fullpath);
-            path = Path.GetDirectoryName(path);
-            path = Path.GetDirectoryName(path);*/
-
-            //maybe check if file exists 1st
-            //StreamReader sr = File.OpenText("../../../" + scriptName + EXTENSION);
-            string s = String.Empty;
-
-            //Path.Combine(basePath, filePath);
-
-            // TODO Any line in a PuppetMaster script starting with a ”%” sign should be ignored.
-
-            /* TODO The GUI shall allow to load a script,
-             * execute it step-by-step and without
-             * interruptions
-             */
-
-            /*while ((s = sr.ReadLine()) != null)
-            {
-                string[] input = s.Split(' ');
-
-                switch (input[0])
-                {
-                    case "WORKER":
-                        createWorker(input);
-                        break;
-                    case "SUBMIT":
-                        processSubmit(input);
-                        break;
-                    case "WAIT":
-                        processWait(input);
-                        break;
-                    case "STATUS:":
-                        processStatus(input);
-                        break;
-                    case "SLOWW":
-                        processSloww(input);
-                        break;
-                    case "FREEZEW":
-                        processFreezew(input);
-                        break;
-                    case "UNFREEZEW":
-                        processUnfreezew(input);
-                        break;
-                    case "FREEZEC":
-                        processFreezec(input);
-                        break;
-                    case "UNFREEZEC":
-                        processUnfreezec(input);
-                        break;
-                    default:
-                        break;
-                }
-                //do minimal amount of work here
-            }*/
-        }
-
         public void processWorker(string[] input)
         {
             string id = input[1];
@@ -204,7 +142,6 @@ namespace PuppetMaster
                 process.Start();
                 NewWorkerEvent(serviceUrl);
 
-                //nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
                 nodeList.Add(new NodeData(serviceUrl));
             }
             else if (input.Length == 5)
@@ -218,7 +155,6 @@ namespace PuppetMaster
                 process.Start();
                 NewWorkerEvent(serviceUrl);
 
-                //nodeList.Add(new NodeData("tcp://" + Util.LocalIPAddress() + ":" + serviceUrl + "/W"));
                 nodeList.Add(new NodeData(serviceUrl));
 
             }
@@ -318,7 +254,6 @@ namespace PuppetMaster
                     }
                     catch (SocketException) { 
                         // this node doesnt exist anymore, let's try other one
-                        // TODO remove the node when it's removed from the cluster
                     }
                 }
             }
@@ -365,16 +300,24 @@ namespace PuppetMaster
         private void processUnfreezew(string[] input)
         {
             int nodeID = Convert.ToInt32(input[1]);
+            bool hadSuccess = false;
 
-            if (nodeList.Count > 0)
+            foreach (NodeData nodeData in nodeList)
             {
-                string url = nodeList[0].URL;
-                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                node.unFreezeW(nodeID);
+                string url = nodeData.URL;
+                Node node = (Node)Activator.GetObject(typeof(Node), url);
+
+                if (node.communicationBehavior.ID == nodeID)
+                {
+                    node.unFreezeW(nodeID);
+                    hadSuccess = true;
+                    break;
+                }
             }
-            else
+
+            if (!hadSuccess)
             {
-                MessageBox.Show("ERROR: Couldn't contact cluster");
+                MessageBox.Show("that Node doesn't exist");
             }
 
         }
@@ -398,16 +341,24 @@ namespace PuppetMaster
         private void processUnfreezec(string[] input)
         {
             int nodeID = Convert.ToInt32(input[1]);
+            bool hadSuccess = false;
 
-            if (nodeList.Count > 0)
+            foreach (NodeData nodeData in nodeList)
             {
-                string url = nodeList[0].URL;
-                ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
-                node.unFreezeC(nodeID);
+                string url = nodeData.URL;
+                Node node = (Node)Activator.GetObject(typeof(Node), url);
+
+                if (node.communicationBehavior.ID == nodeID)
+                {
+                    node.unFreezeC(nodeID);
+                    hadSuccess = true;
+                    break;
+                }
             }
-            else
+
+            if (!hadSuccess)
             {
-                MessageBox.Show("ERROR: Couldn't contact cluster");
+                MessageBox.Show("that Node doesn't exist");
             }
         }
 
