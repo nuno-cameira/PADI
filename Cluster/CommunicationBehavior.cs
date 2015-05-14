@@ -531,30 +531,8 @@ namespace Padi.Cluster
         }
 
 
-        public void onSplitDone(string peer)
-        {
-            Console.WriteLine("onSplitDone(" + peer + ")");
+        abstract public void onSplitDone(string peer);
 
-            int s = -1;
-            foreach (Job j in this.jobs)
-            {
-
-                if ((s = j.getSplit(peer)) != -1)
-                {
-                    j.splitDone(s);
-                    if (j.isJobDone())
-                    {
-                        onJobDone(j.Client);
-                    }
-                }
-            }
-
-            if (this.IsTracker)
-            {
-                //Check if theres available jobs
-                nodeAction((node) => { assignTaskTo(node); }, peer);
-            }
-        }
 
 
         public void onSplitStart(string peer, int split, string clientUrl)
@@ -662,6 +640,12 @@ namespace Padi.Cluster
             throw new SocketException();
         }
 
+        public override void onSplitDone(string peer)
+        {
+            Console.WriteLine("FrozenCommunicationBehavior::onSplitDone");
+            throw new SocketException();
+        }
+
     }
 
 
@@ -740,6 +724,32 @@ namespace Padi.Cluster
                     foreach (ClusterHandler action in freezer)
                         action(this.belongingNode);
                 }
+            }
+        }
+
+
+        public override void onSplitDone(string peer)
+        {
+            Console.WriteLine("onSplitDone(" + peer + ")");
+
+            int s = -1;
+            foreach (Job j in this.jobs)
+            {
+
+                if ((s = j.getSplit(peer)) != -1)
+                {
+                    j.splitDone(s);
+                    if (j.isJobDone())
+                    {
+                        onJobDone(j.Client);
+                    }
+                }
+            }
+
+            if (this.IsTracker)
+            {
+                //Check if theres available jobs
+                nodeAction((node) => { assignTaskTo(node); }, peer);
             }
         }
 
