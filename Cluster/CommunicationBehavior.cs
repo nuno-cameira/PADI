@@ -304,19 +304,22 @@ namespace Padi.Cluster
         {
             if (!this.IsTracker && id == this.ID)
             {
+                belongingNode.switchCommunicationBehavior(new FrozenCommunicationBehavior(this));
                 Console.WriteLine("freezeW()");
                 haltWork = true;
             }
             else
             {
-                if (this.IsTracker)
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeW(id); } });
+
+                /*if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.freezeW(id); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeW(id); } });
                 }
                 else
                 {
-                    nodeAction((trk) => { trk.freezeW(id); }, this.trkUrl);
-                }
+                    nodeAction((trk) => { trk.CommunicationBehavior.freezeW(id); }, this.trkUrl);
+                }*/
             }
         }
 
@@ -325,19 +328,22 @@ namespace Padi.Cluster
         {
             if (this.IsTracker && id == this.ID)
             {
+                belongingNode.switchCommunicationBehavior(new FrozenCommunicationBehavior(this));
                 Console.WriteLine("freezeC()");
                 haltWork = true;
             }
             else
             {
-                if (this.IsTracker)
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeC(id); } });
+
+                /*if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.freezeC(id); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeC(id); } });
                 }
                 else
                 {
-                    nodeAction((trk) => { trk.freezeC(id); }, this.trkUrl);
-                }
+                    nodeAction((trk) => { trk.CommunicationBehavior.freezeC(id); }, this.trkUrl);
+                }*/
             }
         }
 
@@ -346,20 +352,23 @@ namespace Padi.Cluster
         {
             if (!this.IsTracker && id == this.ID)
             {
+                belongingNode.switchCommunicationBehavior(new NormalCommunicationBehavior(this));
                 Console.WriteLine("unFreezeW()");
                 this.haltWork = false;
                 halt.Set();
             }
             else
             {
-                if (this.IsTracker)
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.unFreezeW(id); } });
+
+                /*if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.unFreezeW(id); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { Console.WriteLine("DERP");  node.CommunicationBehavior.unFreezeW(id); } });
                 }
                 else
                 {
-                    nodeAction((trk) => { trk.unFreezeW(id); }, this.trkUrl);
-                }
+                    nodeAction((trk) => { trk.CommunicationBehavior.unFreezeW(id); }, this.trkUrl);
+                }*/
             }
         }
 
@@ -368,20 +377,23 @@ namespace Padi.Cluster
         {
             if (this.IsTracker && id == this.ID)
             {
+                belongingNode.switchCommunicationBehavior(new NormalCommunicationBehavior(this));
                 Console.WriteLine("unFreezeC()");
                 this.haltWork = false;
                 halt.Set();
             }
             else
             {
-                if (this.IsTracker)
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.unFreezeC(id); } });
+
+                /*if (this.IsTracker)
                 {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.unFreezeC(id); } });
+                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.unFreezeC(id); } });
                 }
                 else
                 {
-                    nodeAction((trk) => { trk.unFreezeC(id); }, this.trkUrl);
-                }
+                    nodeAction((trk) => { trk.CommunicationBehavior.unFreezeC(id); }, this.trkUrl);
+                }*/
             }
         }
 
@@ -398,14 +410,16 @@ namespace Padi.Cluster
             }
             else
             {
-                if (this.IsTracker)
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.slowW(id, time); } });
+
+                /*if (this.IsTracker)
                 {
                     clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.slowW(id, time); } });
                 }
                 else
                 {
                     nodeAction((trk) => { trk.slowW(id, time); }, this.trkUrl);
-                }
+                }*/
             }
         }
 

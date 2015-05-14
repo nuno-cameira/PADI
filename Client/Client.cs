@@ -147,7 +147,7 @@ namespace Client
                 catch (Exception)
                 {
                     //entry point doens't exist anymore
-                    clusterEntryPoints.Remove(url);
+                    //clusterEntryPoints.Remove(url);
                 }
             }
 

@@ -155,29 +155,25 @@ namespace Padi.Cluster
 
         public void freezeW(int id)
         {
-            switchCommunicationBehavior(new FrozenCommunicationBehavior(this.communicationBehavior));
-            //communicationBehavior.freezeW(id);
+            communicationBehavior.freezeW(id);
         }
 
 
         public void freezeC(int id)
         {
-            switchCommunicationBehavior(new FrozenCommunicationBehavior(this.communicationBehavior));
-            //communicationBehavior.freezeC(id);
+            communicationBehavior.freezeC(id);
         }
 
 
         public void unFreezeW(int id)
         {
-            switchCommunicationBehavior(new FrozenCommunicationBehavior(this.communicationBehavior));
-            //communicationBehavior.unFreezeW(id);
+            communicationBehavior.unFreezeW(id);
         }
 
 
         public void unFreezeC(int id)
         {
-            switchCommunicationBehavior(new FrozenCommunicationBehavior(this.communicationBehavior));
-            //communicationBehavior.unFreezeC(id);
+            communicationBehavior.unFreezeC(id);
         }
 
 
