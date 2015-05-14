@@ -252,8 +252,8 @@ namespace PuppetMaster
 
                     if (!c.hasJob())
                     {
-                        string inputPath = input[2];
-                        string outputPath = input[3];
+                        string inputPath = BASEDIR + input[2];
+                        string outputPath = BASEDIR + input[3];
                         int splits = Convert.ToInt32(input[4]);
                         string className = input[5];
                         string dllPath = BASEDIR + input[6];
@@ -275,6 +275,17 @@ namespace PuppetMaster
                     startInfo.FileName = "Client.exe";
                     startInfo.Arguments = input[1] + " " + this.clientPort;
                     Process p = Process.Start(startInfo);
+
+                    string url = "tcp://" + Util.LocalIPAddress() + ":" + this.clientPort + "/C";
+                    IClient c = (IClient)Activator.GetObject(typeof(IClient), url);
+
+                    // sets the cluster entry points on the client
+                    List<string> nodesUrl = new List<string>();
+                    foreach (NodeData nodeData in nodeList)
+                    {
+                        nodesUrl.Add(nodeData.URL);
+                    }
+                    c.setEntryPoints(nodesUrl);
 
                 }
                 catch (Exception e)

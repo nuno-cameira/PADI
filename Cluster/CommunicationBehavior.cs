@@ -58,6 +58,34 @@ namespace Padi.Cluster
 
         public bool IsTracker { get { return this.trkUrl.Equals(this.url); } }
 
+        /*public string[] clusterNodes
+        {
+            get
+            {
+                string[] nodesUrl = new string[cluster.Count];
+                int i = 0;
+                foreach (KeyValuePair<string, INode> entry in cluster)
+                {
+                    nodesUrl[i] = entry.Key;
+                    i++;
+                }
+                return nodesUrl;
+            }
+        }*/
+
+        public List<string> clusterNodes
+        {
+            get
+            {
+                List<string> nodesUrl = new List<string>();
+                foreach (KeyValuePair<string, INode> entry in cluster)
+                {
+                    nodesUrl.Add(entry.Key);
+                }
+                return nodesUrl;
+            }
+        }
+
         //By busy we mean if it's working on a client split
         public bool IsBusy { get { return this.splitWork != -1; } }
         #endregion

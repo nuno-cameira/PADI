@@ -100,10 +100,11 @@ namespace Padi.Cluster
         #endregion
 
 
-        public void switchCommunicationBehavior(CommunicationBehavior oldBehavior, CommunicationBehavior newBehavior)
+        public void switchCommunicationBehavior(CommunicationBehavior newBehavior)
         {
 
-        this.communicationBehavior = new FrozenCommunicationBehavior(this.communicationBehavior);
+        //this.communicationBehavior = new FrozenCommunicationBehavior(this.communicationBehavior);
+            this.communicationBehavior = newBehavior;
 
         }
 
@@ -154,25 +155,29 @@ namespace Padi.Cluster
 
         public void freezeW(int id)
         {
-            communicationBehavior.freezeW(id);
+            switchCommunicationBehavior(new FrozenCommunicationBehavior(this.communicationBehavior));
+            //communicationBehavior.freezeW(id);
         }
 
 
         public void freezeC(int id)
         {
-            communicationBehavior.freezeC(id);
+            switchCommunicationBehavior(new FrozenCommunicationBehavior(this.communicationBehavior));
+            //communicationBehavior.freezeC(id);
         }
 
 
         public void unFreezeW(int id)
         {
-            communicationBehavior.unFreezeW(id);
+            switchCommunicationBehavior(new FrozenCommunicationBehavior(this.communicationBehavior));
+            //communicationBehavior.unFreezeW(id);
         }
 
 
         public void unFreezeC(int id)
         {
-            communicationBehavior.unFreezeC(id);
+            switchCommunicationBehavior(new FrozenCommunicationBehavior(this.communicationBehavior));
+            //communicationBehavior.unFreezeC(id);
         }
 
 
