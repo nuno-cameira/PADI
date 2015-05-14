@@ -146,6 +146,11 @@ namespace Padi.Cluster
             communicationBehavior.join(nodeUrl);
         }
 
+        public bool handshake(string nodeUrl)
+        {
+            return communicationBehavior.handshake(nodeUrl);
+        }
+
 
         public void freezeW(int id)
         {

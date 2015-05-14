@@ -7,6 +7,7 @@ namespace Padi.Cluster
 {
     public interface ICluster
     {
+        bool handshake(string url);
         void join(string nodeUrl);
         void disconect(string peer);
         void freezeW(int id);

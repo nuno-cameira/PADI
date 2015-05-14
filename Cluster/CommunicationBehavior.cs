@@ -112,6 +112,12 @@ namespace Padi.Cluster
 
         #region "Cluster Actions"
 
+        public bool handshake(string nodeUrl)
+        {
+            return cluster.ContainsKey(nodeUrl);
+        }
+
+
         public void setup(ClusterReport report)
         {
 
@@ -163,7 +169,11 @@ namespace Padi.Cluster
 
             try
             {
-                onSucess(node);
+                if (node.handshake(this.URL))
+                {
+                    onSucess(node);
+
+                }
                 return true;
             }
             catch (SocketException)//remote server does not exist
@@ -179,12 +189,22 @@ namespace Padi.Cluster
                     if (wasPromoted)
                     {
                         disconect(url);
-                        onSucess(this.belongingNode);
+                        if (node.handshake(this.URL))
+                        {
+                            onSucess(this.belongingNode);
+                        }
                     }
                 }
                 else//If call failed to worker then report to tracker
                 {
-                    nodeAction((trk) => { trk.CommunicationBehavior.disconect(url); }, this.trkUrl);
+                    nodeAction((trk) =>
+                    {
+                        if (node.handshake(this.URL))
+                        {
+                            trk.CommunicationBehavior.disconect(url);
+                        }
+                    }, this.trkUrl
+                        );
                 }
 
                 return false;
@@ -823,7 +843,7 @@ namespace Padi.Cluster
 
         public override void disconect(string peer)
         {
-            Console.WriteLine("disconect::"+peer);
+            Console.WriteLine("disconect::" + peer);
             if (this.IsTracker)
             {
                 lock (cluster)
