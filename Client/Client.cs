@@ -16,6 +16,9 @@ namespace Client
     {
         private static readonly string ABORT_MESSAGE = "Aborting submition...";
 
+        // Maximum size allowed for each split
+        private static readonly int MAX_SPLIT_SIZE = 300 * 1024 * 1024;
+
         //Local worker node used to submit jobs
         private IWorker localWorker = null;
 
@@ -116,8 +119,6 @@ namespace Client
 
         private int splitFile(int splits)
         {
-            Console.WriteLine("[splitFile] Memory is " + GC.GetTotalMemory(false));
-
             // Gets the size of the input fily in bytes
             FileInfo f = new FileInfo(this.inputPath);
             int length = (int)f.Length;
@@ -125,8 +126,14 @@ namespace Client
             // Calculates the size of each split
             int chunkSize = (length / splits);
 
+            //Calculates the least amount of splits that garantee 
+            //that each split size does not exceed MAX_SPLIT_SIZE
+            if(chunkSize > MAX_SPLIT_SIZE){               
+                splits = (int)Math.Ceiling((double)length / MAX_SPLIT_SIZE);
+                chunkSize = (length / splits);
+            }
+
             int splitCount = 1;
-            int fileIndex = 0;
             SplitInfo splitinfo;
 
             using (var input = new FileStream(this.inputPath, FileMode.Open, FileAccess.Read, FileShare.Read, 10))
@@ -173,7 +180,8 @@ namespace Client
         public byte[] returnSplit(int splitNumber)
         {
             Console.WriteLine("returnSplit(" + splitNumber + ")");
-            //MAD HAX - Isto n devia ser necessário...
+
+            //Forcing garbage collection in case of big arrays
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
@@ -183,8 +191,8 @@ namespace Client
 
                 int pos = splitsDictionary[splitNumber].pos;
                 int length = splitsDictionary[splitNumber].length;
-                Console.WriteLine("   START: " + pos);
-                Console.WriteLine("   SIZE: " + length);
+                //Console.WriteLine("   START: " + pos);
+                //Console.WriteLine("   SIZE: " + length);
 
                 b.BaseStream.Seek(pos, SeekOrigin.Begin);
 
