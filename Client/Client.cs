@@ -142,6 +142,7 @@ namespace Client
                     this.localWorker = (IWorker)Activator.GetObject(typeof(IWorker), url);
                     this.localWorker.submit(actualSplits, mapperCode, className, this.url);
                     hadSuccess = true;
+                    break;
                 }
                 catch (Exception)
                 {
