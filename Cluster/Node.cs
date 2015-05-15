@@ -19,7 +19,6 @@ namespace Padi.Cluster
 {
 
 
-
     // A delegate to handle the calls to a node in the cluster
     //public delegate void ClusterHandler(INode node);
 
@@ -56,7 +55,6 @@ namespace Padi.Cluster
 
             int port = extractPortFromURL(url);
             this.channel = new TcpChannel(port);
-            //this.url = "tcp://" + Util.LocalIPAddress() + ":" + port + "/W";
             this.url = url;
 
             this.id = id;
@@ -102,10 +100,7 @@ namespace Padi.Cluster
 
         public void switchCommunicationBehavior(CommunicationBehavior newBehavior)
         {
-
-        //this.communicationBehavior = new FrozenCommunicationBehavior(this.communicationBehavior);
             this.communicationBehavior = newBehavior;
-
         }
 
 

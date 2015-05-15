@@ -40,7 +40,6 @@ namespace PuppetMaster
         {
             this.channel = new TcpChannel(puppetPort);
             this.url = "tcp://localhost:" + puppetPort + "/PM";
-            //this.nodeList = new Dictionary<string, NodeData>();
             this.nodeList = new List<NodeData>();
 
             ChannelServices.RegisterChannel(this.channel, false);
@@ -242,7 +241,6 @@ namespace PuppetMaster
             {
                 foreach (NodeData nodeData in nodeList)
                 {
-                    //MessageBox.Show(nodeData.URL);
                     string url = nodeData.URL;
                     ICluster node = (ICluster)Activator.GetObject(typeof(ICluster), url);
                     try

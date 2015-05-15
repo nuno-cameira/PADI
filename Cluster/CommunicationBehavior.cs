@@ -58,21 +58,6 @@ namespace Padi.Cluster
 
         public bool IsTracker { get { return this.trkUrl.Equals(this.url); } }
 
-        /*public string[] clusterNodes
-        {
-            get
-            {
-                string[] nodesUrl = new string[cluster.Count];
-                int i = 0;
-                foreach (KeyValuePair<string, INode> entry in cluster)
-                {
-                    nodesUrl[i] = entry.Key;
-                    i++;
-                }
-                return nodesUrl;
-            }
-        }*/
-
         public List<string> clusterNodes
         {
             get
@@ -106,14 +91,12 @@ namespace Padi.Cluster
 
             this.url = oldBehavior.url;
             this.trkUrl = oldBehavior.trkUrl;
-            //this.cluster = new Dictionary<string, INode>();
             this.cluster = oldBehavior.cluster;
             this.tracker = oldBehavior.tracker;
             this.splitWork = oldBehavior.splitWork;
 
             this.workThr = oldBehavior.workThr;
             this.id = oldBehavior.id;
-            //this.jobs = new List<Job>();
             this.jobs = oldBehavior.jobs;
         }
 
@@ -180,7 +163,6 @@ namespace Padi.Cluster
          * A safe operation to call remote methods of a specific node.
          * Like the alike 'clusterAction()' it automatically handles disconections.
          */
-
         protected bool nodeAction(ClusterHandler onSucess, string url)
         {
             //Obtain node
@@ -206,8 +188,6 @@ namespace Padi.Cluster
             }
             catch (SocketException)//remote server does not exist
             {
-
-
                 //If call failed to tracker then we need a new one
                 if (url == this.trkUrl)
                 {
@@ -241,7 +221,6 @@ namespace Padi.Cluster
 
 
 
-
         /*
          * A safe operation to call remote methods of all node in the cluster
          * It offers the possibility to exclude the call of the local method
@@ -256,9 +235,6 @@ namespace Padi.Cluster
                 });
             }
         }
-
-
-
 
         #endregion
 
@@ -311,15 +287,6 @@ namespace Padi.Cluster
             else
             {
                 clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeW(id); } });
-
-                /*if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeW(id); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.CommunicationBehavior.freezeW(id); }, this.trkUrl);
-                }*/
             }
         }
 
@@ -335,15 +302,6 @@ namespace Padi.Cluster
             else
             {
                 clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeC(id); } });
-
-                /*if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeC(id); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.CommunicationBehavior.freezeC(id); }, this.trkUrl);
-                }*/
             }
         }
 
@@ -360,15 +318,6 @@ namespace Padi.Cluster
             else
             {
                 clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.unFreezeW(id); } });
-
-                /*if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { Console.WriteLine("DERP");  node.CommunicationBehavior.unFreezeW(id); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.CommunicationBehavior.unFreezeW(id); }, this.trkUrl);
-                }*/
             }
         }
 
@@ -385,15 +334,6 @@ namespace Padi.Cluster
             else
             {
                 clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.unFreezeC(id); } });
-
-                /*if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.unFreezeC(id); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.CommunicationBehavior.unFreezeC(id); }, this.trkUrl);
-                }*/
             }
         }
 
@@ -411,15 +351,6 @@ namespace Padi.Cluster
             else
             {
                 clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.slowW(id, time); } });
-
-                /*if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.slowW(id, time); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.slowW(id, time); }, this.trkUrl);
-                }*/
             }
         }
 
@@ -428,8 +359,6 @@ namespace Padi.Cluster
         {
             const string endln = "\n";
             string status = "";
-
-            //Job myJob=null;
 
             status += "******************************" + endln;
             status += "****      NODE STATUS     ****" + endln;
@@ -783,11 +712,6 @@ namespace Padi.Cluster
                             halt.Reset();
                             Console.WriteLine("Resuming...");
                         }
-                        /*
-                        //DEBUG SHIT
-                        Console.WriteLine("Mapping line " + j);
-                        j++;
-                         */
 
                         result = mapper.Map(line);
 
@@ -950,9 +874,6 @@ namespace Padi.Cluster
 
         public override void onClusterDecrease(string peer)
         {
-            //TODO: Check if node was doing a job 
-            //if so retask it
-
             lock (cluster) { cluster.Remove(peer); }
         }
 

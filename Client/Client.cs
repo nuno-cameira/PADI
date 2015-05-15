@@ -62,7 +62,6 @@ namespace Client
 
         public void setEntryPoints(List<string> entryPoints)
         {
-            //this.EntryPoints = entryPoints;
             this.clusterEntryPoints = entryPoints;
         }
 
@@ -146,7 +145,6 @@ namespace Client
                 catch (Exception)
                 {
                     //entry point doens't exist anymore
-                    //clusterEntryPoints.Remove(url);
                 }
             }
 
@@ -168,14 +166,13 @@ namespace Client
                     //entry point doens't exist
                 }
             }
-            //this.localWorker.submit(actualSplits, mapperCode, className, this.url);
             Console.WriteLine("Submit Ended");
 
         }
 
         private int splitFile(int splits)
         {
-            // Gets the size of the input fily in bytes
+            // Gets the size of the input file in bytes
             FileInfo f = new FileInfo(this.inputPath);
             int length = (int)f.Length;
 
