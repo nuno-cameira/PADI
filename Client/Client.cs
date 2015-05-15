@@ -92,9 +92,8 @@ namespace Client
 
             if (!Directory.Exists(outputPath))
             {
-                Console.WriteLine("ERROR: Output folder does not exist!: " + outputPath);
-                Console.WriteLine(ABORT_MESSAGE);
-                return;
+                Console.WriteLine("Creating directory at :" + outputPath);
+                Directory.CreateDirectory(outputPath);
             }
 
             byte[] mapperCode = null;

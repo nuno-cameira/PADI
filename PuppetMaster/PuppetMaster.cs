@@ -35,8 +35,6 @@ namespace PuppetMaster
 
         private int clientPort = 10001;
 
-        const string BASEDIR = "../../../";
-
    
         public PuppetMaster(int puppetPort)
         {
