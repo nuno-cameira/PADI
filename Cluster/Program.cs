@@ -36,33 +36,10 @@ namespace Padi.Cluster
       
 
             Console.WriteLine("Server Ready!");
-            Console.WriteLine("Type \"kill\" to close the server.");
-            string input;
-
+           
             System.Console.ReadLine();
-            node.status();
-
-            input = System.Console.ReadLine();
-            int splits = Int16.Parse(input);
-            node.submit(splits, null, "", args[1]);
-
-            int t = 2;
-            while (t != 0)
-            {
-                input = System.Console.ReadLine();
-                node.freezeW(2);
-
-                input = System.Console.ReadLine();
-                node.unFreezeW(2);
-                t--;
-
-            }
-
-
-
-            node = null;
             Console.WriteLine("Server killed.");
-            Environment.Exit(0);
+           // Environment.Exit(0);
         }
 
 
