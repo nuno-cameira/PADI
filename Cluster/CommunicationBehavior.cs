@@ -58,6 +58,19 @@ namespace Padi.Cluster
 
         public bool IsTracker { get { return this.trkUrl.Equals(this.url); } }
 
+        public List<string> clusterNodes
+        {
+            get
+            {
+                List<string> nodesUrl = new List<string>();
+                foreach (KeyValuePair<string, INode> entry in cluster)
+                {
+                    nodesUrl.Add(entry.Key);
+                }
+                return nodesUrl;
+            }
+        }
+
         //By busy we mean if it's working on a client split
         public bool IsBusy { get { return this.splitWork != -1; } }
         #endregion
@@ -78,14 +91,12 @@ namespace Padi.Cluster
 
             this.url = oldBehavior.url;
             this.trkUrl = oldBehavior.trkUrl;
-            //this.cluster = new Dictionary<string, INode>();
             this.cluster = oldBehavior.cluster;
             this.tracker = oldBehavior.tracker;
             this.splitWork = oldBehavior.splitWork;
 
             this.workThr = oldBehavior.workThr;
             this.id = oldBehavior.id;
-            //this.jobs = new List<Job>();
             this.jobs = oldBehavior.jobs;
         }
 
@@ -146,7 +157,6 @@ namespace Padi.Cluster
          * A safe operation to call remote methods of a specific node.
          * Like the alike 'clusterAction()' it automatically handles disconections.
          */
-
         protected bool nodeAction(ClusterHandler onSucess, string url)
         {
             //Obtain node
@@ -168,8 +178,6 @@ namespace Padi.Cluster
             }
             catch (SocketException)//remote server does not exist
             {
-
-
                 //If call failed to tracker then we need a new one
                 if (url == this.trkUrl)
                 {
@@ -193,7 +201,6 @@ namespace Padi.Cluster
 
 
 
-
         /*
          * A safe operation to call remote methods of all node in the cluster
          * It offers the possibility to exclude the call of the local method
@@ -208,9 +215,6 @@ namespace Padi.Cluster
                 });
             }
         }
-
-
-
 
         #endregion
 
@@ -256,19 +260,13 @@ namespace Padi.Cluster
         {
             if (!this.IsTracker && id == this.ID)
             {
+                belongingNode.switchCommunicationBehavior(new FrozenCommunicationBehavior(this));
                 Console.WriteLine("freezeW()");
                 haltWork = true;
             }
             else
             {
-                if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.freezeW(id); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.freezeW(id); }, this.trkUrl);
-                }
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeW(id); } });
             }
         }
 
@@ -277,19 +275,13 @@ namespace Padi.Cluster
         {
             if (this.IsTracker && id == this.ID)
             {
+                belongingNode.switchCommunicationBehavior(new FrozenCommunicationBehavior(this));
                 Console.WriteLine("freezeC()");
                 haltWork = true;
             }
             else
             {
-                if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.freezeC(id); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.freezeC(id); }, this.trkUrl);
-                }
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.freezeC(id); } });
             }
         }
 
@@ -298,20 +290,14 @@ namespace Padi.Cluster
         {
             if (!this.IsTracker && id == this.ID)
             {
+                belongingNode.switchCommunicationBehavior(new NormalCommunicationBehavior(this));
                 Console.WriteLine("unFreezeW()");
                 this.haltWork = false;
                 halt.Set();
             }
             else
             {
-                if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.unFreezeW(id); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.unFreezeW(id); }, this.trkUrl);
-                }
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.unFreezeW(id); } });
             }
         }
 
@@ -320,20 +306,14 @@ namespace Padi.Cluster
         {
             if (this.IsTracker && id == this.ID)
             {
+                belongingNode.switchCommunicationBehavior(new NormalCommunicationBehavior(this));
                 Console.WriteLine("unFreezeC()");
                 this.haltWork = false;
                 halt.Set();
             }
             else
             {
-                if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.unFreezeC(id); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.unFreezeC(id); }, this.trkUrl);
-                }
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.CommunicationBehavior.unFreezeC(id); } });
             }
         }
 
@@ -350,14 +330,7 @@ namespace Padi.Cluster
             }
             else
             {
-                if (this.IsTracker)
-                {
-                    clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.slowW(id, time); } });
-                }
-                else
-                {
-                    nodeAction((trk) => { trk.slowW(id, time); }, this.trkUrl);
-                }
+                clusterAction((node) => { if (node.CommunicationBehavior.ID == id) { node.slowW(id, time); } });
             }
         }
 
@@ -366,8 +339,6 @@ namespace Padi.Cluster
         {
             const string endln = "\n";
             string status = "";
-
-            //Job myJob=null;
 
             status += "******************************" + endln;
             status += "****      NODE STATUS     ****" + endln;
@@ -412,8 +383,11 @@ namespace Padi.Cluster
 
         #region "Tracker"
 
-
         protected abstract bool assignTaskTo(INode node);
+
+        public abstract void onJobDone(string clientUrl);
+
+        public abstract void onJobReceived(int splits, byte[] mapper, string classname, string clientUrl);
 
         #endregion
 
@@ -421,117 +395,17 @@ namespace Padi.Cluster
 
         #region "Events"
 
-        public void onClusterIncrease(string peer)
-        {
-            INode newNode = null;
 
-            //Get proxy to new node 
-            if (this.IsTracker) { newNode = (INode)Activator.GetObject(typeof(INode), peer); }
+        public abstract void onTrackerChange(string peer);
 
-            //Add New node to cluster
-            lock (cluster) { if (!cluster.ContainsKey(peer)) { cluster.Add(peer, newNode); } }
+        public abstract void onClusterDecrease(string peer);
 
-            //Check if theres available jobs for him   
-            if (this.IsTracker) { nodeAction((node) => { assignTaskTo(node); }, peer); }
-        }
+        public abstract void onClusterIncrease(string peer);
 
+        public abstract void onSplitDone(string peer);
 
-        public void onClusterDecrease(string peer)
-        {
-            //TODO: Check if node was doing a job 
-            //if so retask it
+        public abstract void onSplitStart(string peer, int split, string clientUrl);
 
-            lock (cluster) { cluster.Remove(peer); }
-        }
-
-
-        public void onTrackerChange(string tracker)
-        {
-            Console.WriteLine("onTrackerChange()");
-            if (!this.IsTracker)
-            {
-                this.tracker = (INode)Activator.GetObject(typeof(INode), tracker);
-            }
-
-            List<ClusterHandler> unfreeze = new List<ClusterHandler>();
-            foreach (ClusterHandler action in freezer)
-            {
-                if (nodeAction(action, tracker))
-                    unfreeze.Add(action);
-            }
-
-            foreach (ClusterHandler doneAction in unfreeze)
-            {
-
-                freezer.Remove(doneAction);
-            }
-
-        }
-
-
-        public void onSplitDone(string peer)
-        {
-            Console.WriteLine("onSplitDone(" + peer + ")");
-
-            int s = -1;
-            foreach (Job j in this.jobs)
-            {
-
-                if ((s = j.getSplit(peer)) != -1)
-                {
-                    j.splitDone(s);
-                    if (j.isJobDone())
-                    {
-                        onJobDone(j.Client);
-                    }
-                }
-            }
-
-            if (this.IsTracker)
-            {
-                //Check if theres available jobs
-                nodeAction((node) => { assignTaskTo(node); }, peer);
-            }
-        }
-
-
-        public void onSplitStart(string peer, int split, string clientUrl)
-        {
-            Console.WriteLine("onSplitStart(" + peer + ", " + split + ", " + clientUrl + ")");
-
-            //Tracker assigned split so no need to re-update
-            if (!this.IsTracker)
-            {
-                foreach (Job j in this.jobs)
-                {
-                    if (j.Client == clientUrl)
-                    {
-                        j.assignSplit(peer, split);
-                    }
-                }
-            }
-        }
-
-
-        public void onJobDone(string clientUrl)
-        {
-            Console.WriteLine("onJobDone(" + clientUrl + ")");
-            if (this.IsTracker)
-            {
-                IClient client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
-                client.onJobDone();
-            }
-        }
-
-
-        public void onJobReceived(int splits, byte[] mapper, string className, string clientUrl)
-        {
-            Console.WriteLine("onJobReceived(" + splits + ",mapper ," + clientUrl + ")");
-
-            //Make a new job
-            Job job = new Job(splits, mapper, className, clientUrl);
-            jobs.Add(job);
-        }
 
         #endregion
 
@@ -597,6 +471,48 @@ namespace Padi.Cluster
         protected override bool assignTaskTo(INode node)
         {
             Console.WriteLine("FrozenCommunicationBehavior::assignTaskTo");
+            throw new SocketException();
+        }
+
+        public override void onJobDone(string clientUrl)
+        {
+            Console.WriteLine("FrozenCommunicationBehavior::onJobDone");
+            throw new SocketException();
+        }
+
+        public override void onJobReceived(int splits, byte[] mapper, string classname, string clientUrl)
+        {
+            Console.WriteLine("FrozenCommunicationBehavior::onJobReceived");
+            throw new SocketException();
+        }
+
+        public override void onTrackerChange(string peer)
+        {
+            Console.WriteLine("FrozenCommunicationBehavior::onTrackerChange");
+            throw new SocketException();
+        }
+
+        public override void onClusterDecrease(string peer)
+        {
+            Console.WriteLine("FrozenCommunicationBehavior::onClusterDecrease");
+            throw new SocketException();
+        }
+
+        public override void onClusterIncrease(string peer)
+        {
+            Console.WriteLine("FrozenCommunicationBehavior::onClusterIncrease");
+            throw new SocketException();
+        }
+
+        public override void onSplitDone(string peer)
+        {
+            Console.WriteLine("FrozenCommunicationBehavior::onSplitDone");
+            throw new SocketException();
+        }
+
+        public override void onSplitStart(string peer, int split, string clientUrl)
+        {
+            Console.WriteLine("FrozenCommunicationBehavior::onSplitStart");
             throw new SocketException();
         }
 
@@ -682,6 +598,32 @@ namespace Padi.Cluster
         }
 
 
+        public override void onSplitDone(string peer)
+        {
+            Console.WriteLine("onSplitDone(" + peer + ")");
+
+            int s = -1;
+            foreach (Job j in this.jobs)
+            {
+
+                if ((s = j.getSplit(peer)) != -1)
+                {
+                    j.splitDone(s);
+                    if (j.isJobDone())
+                    {
+                        onJobDone(j.Client);
+                    }
+                }
+            }
+
+            if (this.IsTracker)
+            {
+                //Check if theres available jobs
+                nodeAction((node) => { assignTaskTo(node); }, peer);
+            }
+        }
+
+
         public override void submit(int splits, byte[] mapper, string classname, string clientUrl)
         {
             if (this.IsTracker)
@@ -750,11 +692,6 @@ namespace Padi.Cluster
                             halt.Reset();
                             Console.WriteLine("Resuming...");
                         }
-                        /*
-                        //DEBUG SHIT
-                        Console.WriteLine("Mapping line " + j);
-                        j++;
-                         */
 
                         result = mapper.Map(line);
 
@@ -887,6 +824,96 @@ namespace Padi.Cluster
             }
             return false;
         }
+
+
+
+
+        public override void onTrackerChange(string tracker)
+        {
+            Console.WriteLine("onTrackerChange()");
+            if (!this.IsTracker)
+            {
+                this.tracker = (INode)Activator.GetObject(typeof(INode), tracker);
+            }
+
+            List<ClusterHandler> unfreeze = new List<ClusterHandler>();
+            foreach (ClusterHandler action in freezer)
+            {
+                if (nodeAction(action, tracker))
+                    unfreeze.Add(action);
+            }
+
+            foreach (ClusterHandler doneAction in unfreeze)
+            {
+
+                freezer.Remove(doneAction);
+            }
+
+        }
+
+
+        public override void onClusterDecrease(string peer)
+        {
+            lock (cluster) { cluster.Remove(peer); }
+        }
+
+
+        public override void onClusterIncrease(string peer)
+        {
+            INode newNode = null;
+
+            //Get proxy to new node 
+            if (this.IsTracker) { newNode = (INode)Activator.GetObject(typeof(INode), peer); }
+
+            //Add New node to cluster
+            lock (cluster) { if (!cluster.ContainsKey(peer)) { cluster.Add(peer, newNode); } }
+
+            //Check if theres available jobs for him   
+            if (this.IsTracker) { nodeAction((node) => { assignTaskTo(node); }, peer); }
+        }
+
+
+
+        public override void onJobDone(string clientUrl)
+        {
+            Console.WriteLine("onJobDone(" + clientUrl + ")");
+            if (this.IsTracker)
+            {
+                IClient client = (IClient)Activator.GetObject(typeof(IClient), clientUrl);
+                client.onJobDone();
+            }
+        }
+
+
+        public override void onSplitStart(string peer, int split, string clientUrl)
+        {
+            Console.WriteLine("onSplitStart(" + peer + ", " + split + ", " + clientUrl + ")");
+
+            //Tracker assigned split so no need to re-update
+            if (!this.IsTracker)
+            {
+                foreach (Job j in this.jobs)
+                {
+                    if (j.Client == clientUrl)
+                    {
+                        j.assignSplit(peer, split);
+                    }
+                }
+            }
+        }
+
+
+        public override void onJobReceived(int splits, byte[] mapper, string className, string clientUrl)
+        {
+            Console.WriteLine("onJobReceived(" + splits + ",mapper ," + clientUrl + ")");
+
+            //Make a new job
+            Job job = new Job(splits, mapper, className, clientUrl);
+            jobs.Add(job);
+        }
+
+
+
     }
 
 

@@ -9,8 +9,7 @@ namespace Padi.SharedModel
     public interface IClient
     {
         void Submit(string inputPath, string outputPath, int splits, string className, string dllPath);
-        
-      
+
         /// <summary>
         /// 
         /// </summary>
@@ -23,18 +22,22 @@ namespace Padi.SharedModel
         /// </summary>
         void onJobDone();
 
-
-       /// <summary>
-       /// Returns the content of the file in the given split number
-       /// </summary>
-       /// <param name="splitNumber"></param>
-       /// <returns></returns>
+        /// <summary>
+        /// Returns the content of the file in the given split number
+        /// </summary>
+        /// <param name="splitNumber"></param>
+        /// <returns></returns>
         byte[] returnSplit(int splitNumber);
 
         /// <summary>
         /// Checks if the client is currently working on a job 
         /// </summary>
         bool hasJob();
+
+        /// <summary>
+        /// Sets the entry points for future comunication with the cluster 
+        /// </summary>
+        void setEntryPoints(List<string> entryPoints);
 
     }
 }

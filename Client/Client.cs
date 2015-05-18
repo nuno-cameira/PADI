@@ -21,6 +21,7 @@ namespace Client
 
         //Local worker node used to submit jobs
         private IWorker localWorker = null;
+        private List<string> clusterEntryPoints = null;
 
         private readonly TcpChannel channel = null;
         private readonly string url = null;
@@ -44,6 +45,25 @@ namespace Client
         private Dictionary<int, SplitInfo> splitsDictionary = new Dictionary<int, SplitInfo>();
 
 
+        #region "Properties
+        public List<string> EntryPoints
+        {
+            /*get
+            {
+                return this.clusterEntryPoints;
+            }*/
+            set
+            {
+                this.clusterEntryPoints = value;
+            }
+        }
+        #endregion
+
+
+        public void setEntryPoints(List<string> entryPoints)
+        {
+            this.clusterEntryPoints = entryPoints;
+        }
 
         public Client(string EntryURL, int Port)
         {
@@ -62,6 +82,7 @@ namespace Client
         }
 
 
+
         public void Submit(string inputPath, string outputPath, int splits, string className, string dllPath)
         {
             this.job = true;
@@ -70,9 +91,8 @@ namespace Client
 
             if (!Directory.Exists(outputPath))
             {
-                Console.WriteLine("ERROR: Output folder does not exist!: " + outputPath);
-                Console.WriteLine(ABORT_MESSAGE);
-                return;
+                Console.WriteLine("Creating directory at :" + outputPath);
+                Directory.CreateDirectory(outputPath);
             }
 
             byte[] mapperCode = null;
@@ -111,15 +131,48 @@ namespace Client
 
             Console.WriteLine("Submiting...");
 
-            //Submits the job to the known worker node
-            this.localWorker.submit(actualSplits, mapperCode, className, this.url);
+            //Submits the job to an entry point
+            bool hadSuccess = false;
+            foreach (string url in clusterEntryPoints)
+            {
+                try
+                {
+                    this.localWorker = (IWorker)Activator.GetObject(typeof(IWorker), url);
+                    this.localWorker.submit(actualSplits, mapperCode, className, this.url);
+                    hadSuccess = true;
+                    break;
+                }
+                catch (Exception)
+                {
+                    //entry point doens't exist anymore
+                }
+            }
+
+            // If none of the entry points worked we can provide a new one in the console
+            while (!hadSuccess)
+            {
+                Console.WriteLine("Please provide a new entry point:");
+                try
+                {
+                    string newEntryPoint = Console.ReadLine();
+                    this.localWorker = (IWorker)Activator.GetObject(typeof(IWorker), newEntryPoint);
+                    this.localWorker.submit(actualSplits, mapperCode, className, newEntryPoint);
+                    hadSuccess = true;
+                    clusterEntryPoints.Add(newEntryPoint);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Entry point doens't exist!");
+                    //entry point doens't exist
+                }
+            }
             Console.WriteLine("Submit Ended");
 
         }
 
         private int splitFile(int splits)
         {
-            // Gets the size of the input fily in bytes
+            // Gets the size of the input file in bytes
             FileInfo f = new FileInfo(this.inputPath);
             int length = (int)f.Length;
 
@@ -128,7 +181,8 @@ namespace Client
 
             //Calculates the least amount of splits that garantee 
             //that each split size does not exceed MAX_SPLIT_SIZE
-            if(chunkSize > MAX_SPLIT_SIZE){               
+            if (chunkSize > MAX_SPLIT_SIZE)
+            {
                 splits = (int)Math.Ceiling((double)length / MAX_SPLIT_SIZE);
                 chunkSize = (length / splits);
             }
