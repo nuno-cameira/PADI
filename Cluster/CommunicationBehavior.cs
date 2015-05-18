@@ -167,7 +167,18 @@ namespace Padi.Cluster
             if (url == this.trkUrl)
                 node = this.tracker;
             else
-                node = cluster[url];
+            {
+                lock (cluster)
+                {
+                    if (cluster.ContainsKey(url))
+                        node = cluster[url];
+                    else
+                        return true;
+                }
+            }
+
+
+
 
             //Checks if proxy exists
             if (node == null)
@@ -185,12 +196,18 @@ namespace Padi.Cluster
                 if (url == this.trkUrl)
                 {
                     freezer.Add(onSucess);
-
-                    bool wasPromoted = tryPromote(url);
-                    if (wasPromoted)
+                    try
                     {
-                        disconect(url);
-                        onSucess(this.belongingNode);
+                        bool wasPromoted = tryPromote(url);
+                        if (wasPromoted)
+                        {
+                            disconect(url);
+                            onSucess(this.belongingNode);
+                        }
+                    }
+                    catch
+                    {
+                        //Do nothing, this is required to mitage error caused by the dead simulation
                     }
                 }
                 else//If call failed to worker then report to tracker
@@ -210,14 +227,18 @@ namespace Padi.Cluster
          */
         protected void clusterAction(ClusterHandler onSucess)
         {
-            foreach (KeyValuePair<string, INode> entry in cluster)
+            lock (cluster)
             {
-                this.workThr.AssyncInvoke(() =>
+                foreach (KeyValuePair<string, INode> entry in cluster)
                 {
-                    nodeAction(onSucess, entry.Key);
-                });
+                    this.workThr.AssyncInvoke(() =>
+                    {
+                        nodeAction(onSucess, entry.Key);
+                    });
+                }
             }
         }
+
 
         #endregion
 
