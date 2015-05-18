@@ -871,6 +871,7 @@ namespace Padi.Cluster
             if (!this.IsTracker)
             {
                 this.tracker = (INode)Activator.GetObject(typeof(INode), tracker);
+                this.trkUrl = tracker;
             }
 
             List<ClusterHandler> unfreeze = new List<ClusterHandler>();
