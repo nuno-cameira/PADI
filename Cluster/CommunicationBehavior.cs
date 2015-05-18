@@ -98,6 +98,9 @@ namespace Padi.Cluster
             this.workThr = oldBehavior.workThr;
             this.id = oldBehavior.id;
             this.jobs = oldBehavior.jobs;
+            this.clientWork = oldBehavior.clientWork;
+
+          
         }
 
         public CommunicationBehavior(INode node, int id, string url, bool ensureSecurity)
@@ -526,7 +529,20 @@ namespace Padi.Cluster
     class NormalCommunicationBehavior : CommunicationBehavior
     {
 
-        public NormalCommunicationBehavior(CommunicationBehavior oldCommunicationBehavior) : base(oldCommunicationBehavior) { }
+        public NormalCommunicationBehavior(CommunicationBehavior oldCommunicationBehavior) : base(oldCommunicationBehavior) {
+            if (IsBusy)
+            {
+
+                foreach (Job j in jobs)
+                {
+                    if (j.getSplit(this.URL) != -1)
+                    {
+                        doWork(splitWork, j.Mapper, j.ClassName, j.Client);
+                        break;
+                    }
+                }
+            }
+        }
 
         public NormalCommunicationBehavior(INode cluster, int id, string url, bool ensureSecurity) : base(cluster, id, url, ensureSecurity) { }
 
